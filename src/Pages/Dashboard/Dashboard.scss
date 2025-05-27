@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // Variables
 $primary-color: #3a36e0;
 $primary-gradient: linear-gradient(135deg, #3a36e0, #5d3be8);
@@ -166,15 +168,15 @@ $box-shadow-hover: 0 5px 25px rgba(58, 54, 224, 0.2);
       position: relative;
       
       &.high {
-        background: linear-gradient(90deg, $success-color, lighten($success-color, 10%));
+        background: linear-gradient(90deg, $success-color, color.adjust($success-color, $lightness: 10%));
       }
       
       &.medium {
-        background: linear-gradient(90deg, $warning-color, lighten($warning-color, 10%));
+        background: linear-gradient(90deg, $warning-color, color.adjust($warning-color, $lightness: 10%));
       }
       
       &.low {
-        background: linear-gradient(90deg, $danger-color, lighten($danger-color, 10%));
+        background: linear-gradient(90deg, $danger-color, color.adjust($danger-color, $lightness: 10%));
       }
     }
   }
