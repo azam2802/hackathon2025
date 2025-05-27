@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from analyze.views import HelloWorld
+from analyze.views import HelloWorld, ReportSubmissionView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/hello/', HelloWorld.as_view(), name='hello'),
+    path('api/reports/', ReportSubmissionView.as_view(), name='submit_report'),
 ]
