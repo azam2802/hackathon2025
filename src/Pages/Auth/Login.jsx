@@ -44,6 +44,9 @@ const Login = () => {
           </div>
           <h1>Вход в систему</h1>
           <p>Авторизуйтесь для доступа к системе</p>
+          <Link to="/landing" className="landing-link">
+            Узнать больше о системе
+          </Link>
         </div>
         
         <div className="auth-content">

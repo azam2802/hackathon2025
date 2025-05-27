@@ -5,7 +5,9 @@ import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
 import { useAuth } from '../../hooks/useAuth'
 import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
-import { Dashboard, Assignment, Search, BarChart, Analytics, Logout } from '@mui/icons-material'
+import { Assignment, Search, BarChart, Analytics, Logout } from '@mui/icons-material'
+import { IconDashboard } from '@tabler/icons-react';
+
 
 const Layout = () => {
   const { user, loading } = useAuth();
@@ -92,8 +94,8 @@ const Layout = () => {
           <span>ГосАналитика</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/dashboard" end className={({ isActive }) => isActive ? 'active' : ''}>
-            <Dashboard className="sidebar-icon" />
+          <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+            <IconDashboard className="sidebar-icon" />
             <span>Дашборд</span>
           </NavLink>
           <NavLink to="/complaints" className={({ isActive }) => isActive ? 'active' : ''}>

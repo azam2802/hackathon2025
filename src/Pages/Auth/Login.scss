@@ -191,6 +191,22 @@
   }
 }
 
+.landing-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  color: #3498db;
+  text-decoration: none;
+  border: 1px solid #3498db;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #3498db;
+    color: white;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
