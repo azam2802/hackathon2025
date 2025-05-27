@@ -94,7 +94,7 @@ const Layout = () => {
           <span>ГосАналитика</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/dashboard" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
             <IconDashboard className="sidebar-icon" />
             <span>Дашборд</span>
           </NavLink>
