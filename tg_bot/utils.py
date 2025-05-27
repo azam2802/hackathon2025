@@ -30,29 +30,6 @@ async def format_report(report_data: Dict[str, Any]) -> str:
     
     return report_text
 
-
-def format_location_info(location_data: Optional[Dict[str, Any]]) -> str:
-    """Format location information"""
-    if not location_data:
-        return "Местоположение не предоставлено"
-    
-    lat = location_data.get('latitude')
-    lon = location_data.get('longitude')
-    address = location_data.get('address', 'Адрес не определен')
-    source = location_data.get('source', 'unknown')
-    
-    if lat and lon:
-        source_text = ""
-        if source == "city_selection":
-            source_text = " (по выбранному городу)"
-        elif source == "user_location":
-            source_text = " (точное местоположение пользователя)"
-        
-        return f"Координаты: {lat}, {lon}{source_text}\nАдрес: {address}"
-    else:
-        return "Местоположение не предоставлено"
-
-
 def get_city_coordinates(city_name: str) -> Optional[Dict[str, Any]]:
     """Get coordinates for a selected city"""
     coordinates = CITY_COORDINATES.get(city_name)

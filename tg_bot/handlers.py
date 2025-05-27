@@ -171,9 +171,7 @@ async def process_city(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     
     location_info = ""
-    if city_location:
-        location_info = f"\n📍 Координаты: {city_location['latitude']:.4f}, {city_location['longitude']:.4f}"
-    
+   
     await callback.message.edit_text(
         f"✅ Тип обращения: **{data.get('type')}**\n"
         f"✅ Регион: **{data.get('region')}**\n"
