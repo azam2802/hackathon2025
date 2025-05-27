@@ -79,18 +79,18 @@ const AdminPanel = ({ onBack }) => {
                 ← Back to Website
               </button>
             )}
-            <h1>Admin Panel</h1>
+            <h1>Админ панель</h1>
           </div>
           <div className="admin-info">
-            <span>Welcome, {user?.email}</span>
+            <span>Добро пожаловать, {user?.email}</span>
             <button onClick={handleLogout} className="logout-btn">
-              Logout
+              Выйти из аккаунта
             </button>
           </div>
         </div>
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading pending users...</p>
+          <p>Загрузка...</p>
         </div>
       </div>
     );
@@ -102,15 +102,15 @@ const AdminPanel = ({ onBack }) => {
         <div className="admin-header-left">
           {onBack && (
             <button onClick={onBack} className="back-btn">
-              ← Back to Website
+              ← Назад
             </button>
           )}
-          <h1>Admin Panel</h1>
+          <h1>Админ панель</h1>
         </div>
         <div className="admin-info">
-          <span>Welcome, {user?.email}</span>
+          <span>Добро пожаловать, {user?.email}</span>
           <button onClick={handleLogout} className="logout-btn">
-            Logout
+            Выйти из аккаунта
           </button>
         </div>
       </div>
@@ -129,11 +129,11 @@ const AdminPanel = ({ onBack }) => {
       )}
 
       <div className="pending-users-section">
-        <h2>Pending User Approvals ({pendingUsers.length})</h2>
+        <h2>Пользователи ожидающие подтверждения ({pendingUsers.length})</h2>
         
         {pendingUsers.length === 0 ? (
           <div className="no-pending">
-            <p>No pending user approvals at this time.</p>
+            <p>Нет пользователей ожидающих подтверждения.</p>
           </div>
         ) : (
           <div className="users-list">
@@ -143,7 +143,7 @@ const AdminPanel = ({ onBack }) => {
                   <h3>{pendingUser.displayName || 'User'}</h3>
                   <p className="email">{pendingUser.email}</p>
                   <p className="created">
-                    Registered: {
+                    Зарагестрированные: {
                       pendingUser.createdAt && typeof pendingUser.createdAt.toDate === 'function'
                         ? pendingUser.createdAt.toDate().toLocaleDateString()
                         : pendingUser.createdAt instanceof Date

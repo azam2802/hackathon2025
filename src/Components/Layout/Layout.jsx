@@ -1,93 +1,29 @@
-import React, { useState } from 'react'
-import { Outlet, NavLink } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import './Layout.scss'
 import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
 import { useAuth } from '../../hooks/useAuth'
-import { signOutUser, signInUser, signUpUser, isSuperAdmin } from '../../firebase/auth'
+import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
 
 const Layout = () => {
   const { user, loading } = useAuth();
-  const [showLoginForm, setShowLoginForm] = useState(false);
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
+  const navigate = useNavigate();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    displayName: ''
-  });
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
 
   const handleLogout = async () => {
     try {
       await signOutUser();
+      navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
-    }
-  };
-
-  const handleAuthToggle = (type) => {
-    setShowLoginForm(type === 'login');
-    setShowRegisterForm(type === 'register');
-    setAuthError('');
-    setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      displayName: ''
-    });
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setAuthError('');
-
-    try {
-      await signInUser(formData.email, formData.password);
-      setShowLoginForm(false);
-    } catch (error) {
-      setAuthError(error.message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setAuthError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setAuthError('Passwords do not match');
-      setAuthLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setAuthError('Password must be at least 6 characters long');
-      setAuthLoading(false);
-      return;
-    }
-
-    try {
-      await signUpUser(formData.email, formData.password, formData.displayName);
-      setShowRegisterForm(false);
-      setAuthError('');
-      alert('Registration successful! Please wait for admin approval.');
-    } catch (error) {
-      setAuthError(error.message);
-    } finally {
-      setAuthLoading(false);
     }
   };
 
@@ -102,135 +38,6 @@ const Layout = () => {
         <ParticlesBackground />
         <div className="loading-screen">
           <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // If no user is authenticated, show only the auth interface
-  if (!user) {
-    return (
-      <div className="app-layout auth-only-layout">
-        <ParticlesBackground />
-        
-        <div className="auth-container">
-          <div className="auth-header">
-            <div className="logo">
-              <img src="/logo-gov.svg" alt="ГосАналитика" />
-              <span>ГосАналитика</span>
-            </div>
-            <h1>Система анализа эффективности государственных услуг</h1>
-            <p>Авторизуйтесь для доступа к системе</p>
-          </div>
-
-          <div className="auth-content">
-            {!showLoginForm && !showRegisterForm ? (
-              // Show login/register buttons
-              <div className="auth-buttons">
-                <button onClick={() => handleAuthToggle('login')} className="auth-btn login-btn">
-                  Вход
-                </button>
-                <button onClick={() => handleAuthToggle('register')} className="auth-btn register-btn">
-                  Регистрация
-                </button>
-              </div>
-            ) : showLoginForm ? (
-              // Show login form
-              <div className="auth-form-container">
-                <form onSubmit={handleLogin} className="auth-form">
-                  <h3>Вход в систему</h3>
-                  
-                  <div className="superadmin-info">
-                    <small>Суперадмин: superadmin@gov.kg / SuperAdmin123!</small>
-                  </div>
-                  
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Пароль"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  
-                  {authError && <div className="error-message">{authError}</div>}
-                  
-                  <div className="form-actions">
-                    <button type="submit" disabled={authLoading}>
-                      {authLoading ? 'Вход...' : 'Войти'}
-                    </button>
-                    <button type="button" onClick={() => handleAuthToggle('')}>
-                      Отмена
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              // Show register form
-              <div className="auth-form-container">
-                <form onSubmit={handleRegister} className="auth-form">
-                  <h3>Регистрация в системе</h3>
-                  
-                  <input
-                    type="text"
-                    name="displayName"
-                    placeholder="Полное имя"
-                    value={formData.displayName}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Пароль (мин. 6 символов)"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                    minLength="6"
-                  />
-                  
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Подтвердите пароль"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  
-                  {authError && <div className="error-message">{authError}</div>}
-                  
-                  <div className="form-actions">
-                    <button type="submit" disabled={authLoading}>
-                      {authLoading ? 'Регистрация...' : 'Зарегистрироваться'}
-                    </button>
-                    <button type="button" onClick={() => handleAuthToggle('')}>
-                      Отмена
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -317,7 +124,7 @@ const Layout = () => {
                 onClick={() => setShowAdminPanel(true)} 
                 className="admin-panel-button"
               >
-                Admin Panel
+                Админ панель
               </button>
             )}
             <button onClick={handleLogout} className="logout-button">
@@ -342,4 +149,4 @@ const Layout = () => {
   )
 }
 
-export default Layout 
+export default Layout
