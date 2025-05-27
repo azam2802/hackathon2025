@@ -69,7 +69,7 @@ def analyze_report_text(report_text):
             result = json.loads(response_content)
             if not isinstance(result, dict) or 'service' not in result or 'agency' not in result:
                 print("Invalid response format - missing required fields")
-                return {"service": "Unknown", "agency": "Unknown"}
+                return {"service": "Spam", "agency": "Spam"}
             
             # Verify the service exists in our list
             service_exists = any(item['service'] == result['service'] and item['agency'] == result['agency'] 
@@ -77,7 +77,7 @@ def analyze_report_text(report_text):
             
             if not service_exists:
                 print(f"Service/Agency pair not found in our list: {result}")
-                return {"service": "Unknown", "agency": "Unknown"}
+                return {"service": "Spam", "agency": "Spam"}
                 
             return result
         except json.JSONDecodeError as e:
