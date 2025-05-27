@@ -4,31 +4,66 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from geopy.geocoders import Nominatim
 from config import CITY_COORDINATES
+from localization import get_text, get_region_name, get_report_type_name
 
 
-async def format_report(report_data: Dict[str, Any]) -> str:
+async def format_report(report_data: Dict[str, Any], lang: str = 'ru') -> str:
     """Format report data into a readable string"""
     
+    # Get localized field names
+    header = get_text('report_header', lang)
+    type_field = get_text('report_type_field', lang, type=get_report_type_name(report_data.get('type', 'Не указан'), lang))
+    region_field = get_text('report_region_field', lang, region=get_region_name(report_data.get('region', 'Не указан'), lang))
+    city_field = get_text('report_city_field', lang, city=report_data.get('city', 'Не указан'))
+    contact_field = get_text('report_contact_field', lang, contact=report_data.get('user_name', 'Не указано'))
+    userid_field = get_text('report_userid_field', lang, user_id=report_data.get('user_id', 'Не указан'))
+    content_field = get_text('report_content_field', lang, content=report_data.get('report_text', 'Не указан'))
+    location_field = get_text('report_location_field', lang, location=format_location_info(report_data.get('location'), lang))
+    date_field = get_text('report_date_field', lang, date=report_data.get('created_at', datetime.now().strftime('%d.%m.%Y %H:%M')))
+    
     report_text = f"""
-📋 **ОБРАЩЕНИЕ ПО ГОСУДАРСТВЕННЫМ УСЛУГАМ**
+{header}
 
-🏷️ **Тип обращения:** {report_data.get('type', 'Не указан')}
-🌍 **Регион:** {report_data.get('region', 'Не указан')}
-🏙️ **Населенный пункт:** {report_data.get('city', 'Не указан')}
+{type_field}
+{region_field}
+{city_field}
 
-👤 **Контактные данные:** {report_data.get('user_name', 'Не указано')}
-📱 **ID пользователя:** {report_data.get('user_id', 'Не указан')}
+{contact_field}
+{userid_field}
 
-📝 **Содержание обращения:**
-{report_data.get('report_text', 'Не указан')}
+{content_field}
 
-📍 **Местоположение:**
-{format_location_info(report_data.get('location'))}
+{location_field}
 
-🕐 **Дата регистрации:** {report_data.get('created_at', datetime.now().strftime('%d.%m.%Y %H:%M'))}
+{date_field}
 """
     
     return report_text
+
+
+def format_location_info(location_data: Optional[Dict[str, Any]], lang: str = 'ru') -> str:
+    """Format location information"""
+    if not location_data:
+        return "Местоположение не предоставлено" if lang == 'ru' else "Жайгашкан жери көрсөтүлгөн эмес"
+    
+    lat = location_data.get('latitude')
+    lon = location_data.get('longitude')
+    address = location_data.get('address', 'Адрес не определен' if lang == 'ru' else 'Дареги аныкталбаган')
+    source = location_data.get('source', 'unknown')
+    
+    if lat and lon:
+        source_text = ""
+        if source == "city_selection":
+            source_text = " (по выбранному городу)" if lang == 'ru' else " (тандалган шаар боюнча)"
+        elif source == "user_location":
+            source_text = " (точное местоположение пользователя)" if lang == 'ru' else " (колдонуучунун так жайгашкан жери)"
+        
+        coord_text = "Координаты" if lang == 'ru' else "Координаттар"
+        addr_text = "Адрес" if lang == 'ru' else "Дареги"
+        return f"{coord_text}: {lat}, {lon}{source_text}\n{addr_text}: {address}"
+    else:
+        return "Местоположение не предоставлено" if lang == 'ru' else "Жайгашкан жери көрсөтүлгөн эмес"
+
 
 def get_city_coordinates(city_name: str) -> Optional[Dict[str, Any]]:
     """Get coordinates for a selected city"""

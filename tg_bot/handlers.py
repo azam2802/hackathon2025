@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from states import ReportStates
 from keyboards import (
     get_main_menu_keyboard, get_report_types_keyboard, get_regions_keyboard,
-    get_cities_keyboard, get_confirmation_keyboard
+    get_cities_keyboard, get_confirmation_keyboard, get_language_keyboard
 )
 from utils import (
     format_report, get_address_from_coordinates, save_report_to_file,
@@ -18,6 +18,7 @@ from utils import (
 )
 from config import ADMIN_USER_ID, API_ENABLED
 from api_client import send_report_to_api
+from localization import get_text, get_user_language, get_region_name, get_report_type_name
 
 router = Router()
 
@@ -27,57 +28,85 @@ async def start_command(message: Message, state: FSMContext):
     """Handle /start command"""
     await state.clear()
     
-    welcome_text = f"""
-🏛️ Добро пожаловать в систему обращений по государственным услугам Кыргызской Республики.
-
-Данная система предназначена для подачи жалоб и рекомендаций по качеству предоставления государственных услуг.
-
-Выберите действие:
-"""
+    # Get user's language preference (default to Russian)
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    welcome_text = get_text('welcome', lang)
     
     await message.answer(
         welcome_text,
-        reply_markup=get_main_menu_keyboard()
+        reply_markup=get_main_menu_keyboard(lang)
     )
 
 
 @router.message(Command("help"))
-async def help_command(message: Message):
+async def help_command(message: Message, state: FSMContext):
     """Handle /help command"""
-    help_text = """
-ℹ️ **Инструкция по использованию системы**
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    help_text = f"""
+{get_text('help_title', lang)}
 
-**Доступные команды:**
-• /start - Начать работу с системой
-• /help - Показать данную инструкцию
-• /cancel - Отменить текущее действие
+{get_text('help_commands', lang)}
 
-**Порядок подачи обращения:**
-1. Нажмите "📝 Подать обращение"
-2. Выберите тип обращения (Жалоба/Рекомендации)
-3. Выберите регион
-4. Выберите населенный пункт
-5. Изложите суть обращения
-6. Укажите контактные данные
-7. Подтвердите отправку
+{get_text('help_process', lang)}
 
-**Техническая поддержка:** По вопросам работы системы обращайтесь к администратору.
+{get_text('help_support', lang)}
 """
     
     await message.answer(help_text, parse_mode="Markdown")
 
 
+@router.message(Command("language"))
+async def language_command(message: Message, state: FSMContext):
+    """Handle /language command"""
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    await message.answer(
+        get_text('select_language', lang),
+        reply_markup=get_language_keyboard(),
+        parse_mode="Markdown"
+    )
+
+
+@router.callback_query(F.data.startswith("set_language:"))
+async def set_language(callback: CallbackQuery, state: FSMContext):
+    """Handle language selection"""
+    await callback.answer()
+    
+    lang = callback.data.split(":", 1)[1]
+    await state.update_data(language=lang)
+    
+    await callback.message.edit_text(
+        get_text('language_changed', lang),
+        parse_mode="Markdown"
+    )
+    
+    await callback.message.answer(
+        get_text('choose_action', lang),
+        reply_markup=get_main_menu_keyboard(lang)
+    )
+
+
 @router.message(Command("cancel"))
 async def cancel_command(message: Message, state: FSMContext):
     """Handle /cancel command"""
-    await state.clear()
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    await state.update_data(language=lang)  # Preserve language setting
+    await state.set_state(None)  # Clear state but keep data
+    
     await message.answer(
-        "❌ Действие отменено.",
+        get_text('action_cancelled', lang),
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer(
-        "Выберите действие:",
-        reply_markup=get_main_menu_keyboard()
+        get_text('choose_action', lang),
+        reply_markup=get_main_menu_keyboard(lang)
     )
 
 
@@ -86,16 +115,20 @@ async def start_report_creation(callback: CallbackQuery, state: FSMContext):
     """Start report creation process"""
     await callback.answer()
     
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
     # Initialize report data
     await state.update_data(
         user_id=callback.from_user.id,
         username=callback.from_user.username or "Не указан",
-        created_at=datetime.now().strftime('%d.%m.%Y %H:%M')
+        created_at=datetime.now().strftime('%d.%m.%Y %H:%M'),
+        language=lang
     )
     
     await callback.message.edit_text(
-        "📝 **Подача обращения**\n\nВыберите тип обращения:",
-        reply_markup=get_report_types_keyboard(),
+        get_text('creating_report', lang),
+        reply_markup=get_report_types_keyboard(lang),
         parse_mode="Markdown"
     )
     
@@ -107,12 +140,17 @@ async def process_report_type(callback: CallbackQuery, state: FSMContext):
     """Process report type selection"""
     await callback.answer()
     
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
     report_type = callback.data.split(":", 1)[1]
     await state.update_data(type=report_type)
     
+    localized_type = get_report_type_name(report_type, lang)
+    
     await callback.message.edit_text(
-        f"✅ Тип обращения: **{report_type}**\n\nВыберите регион:",
-        reply_markup=get_regions_keyboard(),
+        get_text('select_region', lang, type=localized_type),
+        reply_markup=get_regions_keyboard(lang),
         parse_mode="Markdown"
     )
     
@@ -186,18 +224,16 @@ async def process_city(callback: CallbackQuery, state: FSMContext):
 @router.message(ReportStates.waiting_for_report_text)
 async def process_report_text(message: Message, state: FSMContext):
     """Process report text input"""
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
     if len(message.text) < 10:
-        await message.answer(
-            "❌ Текст обращения слишком короткий. Минимальная длина - 10 символов."
-        )
+        await message.answer(get_text('text_too_short', lang))
         return
     
     await state.update_data(report_text=message.text)
     
-    await message.answer(
-        "✅ Текст обращения принят.\n\n"
-        "Укажите ваши контактные данные (ФИО):"
-    )
+    await message.answer(get_text('enter_contact_info', lang))
     
     await state.set_state(ReportStates.waiting_for_user_name)
 
@@ -205,17 +241,16 @@ async def process_report_text(message: Message, state: FSMContext):
 @router.message(ReportStates.waiting_for_user_name)
 async def process_user_name(message: Message, state: FSMContext):
     """Process user name input"""
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
     if len(message.text) < 2:
-        await message.answer(
-            "❌ Контактные данные слишком короткие. Минимальная длина - 2 символа."
-        )
+        await message.answer(get_text('contact_too_short', lang))
         return
     
     await state.update_data(user_name=message.text)
     
-    await message.answer(
-        "✅ Контактные данные сохранены.\n\n"
-    )
+    await message.answer(get_text('location_determined', lang))
     
     await show_report_confirmation(message, state)
 
@@ -226,6 +261,7 @@ async def process_user_name(message: Message, state: FSMContext):
 async def show_report_confirmation(message: Message, state: FSMContext):
     """Show report confirmation"""
     data = await state.get_data()
+    lang = get_user_language(data)
     
     # Validate data
     is_valid, validation_message = validate_report_data(data)
@@ -235,12 +271,11 @@ async def show_report_confirmation(message: Message, state: FSMContext):
         return
     
     # Format report for preview
-    report_preview = await format_report(data)
+    report_preview = await format_report(data, lang)
     
     await message.answer(
-        f"📋 **Предварительный просмотр обращения:**\n\n{report_preview}\n\n"
-        f"Проверьте данные и подтвердите отправку:",
-        reply_markup=get_confirmation_keyboard(),
+        get_text('report_preview', lang, report=report_preview),
+        reply_markup=get_confirmation_keyboard(lang),
         parse_mode="Markdown"
     )
     
@@ -253,10 +288,11 @@ async def confirm_report(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     
     data = await state.get_data()
+    lang = get_user_language(data)
     
     # Show processing message
     await callback.message.edit_text(
-        "⏳ **Обработка обращения...**\n\nПожалуйста, подождите.",
+        get_text('processing', lang),
         parse_mode="Markdown"
     )
     
@@ -284,7 +320,7 @@ async def confirm_report(callback: CallbackQuery, state: FSMContext):
         registration_number = filename.split('/')[-1] if filename else 'LOCAL_BACKUP'
     
     # Format final report
-    final_report = await format_report(data)
+    final_report = await format_report(data, lang)
     
     # Send to admin if configured
     if ADMIN_USER_ID:
@@ -306,20 +342,9 @@ async def confirm_report(callback: CallbackQuery, state: FSMContext):
     
     # Prepare success message
     if api_response and api_response.get('success'):
-        success_message = (
-            "✅ **Обращение принято к рассмотрению**\n\n"
-            "Ваше обращение успешно зарегистрировано в системе и будет рассмотрено "
-            "в установленные законодательством сроки.\n\n"
-            f"📁 **Регистрационный номер:** `{registration_number}`\n\n"
-            "Вы можете использовать данный номер для отслеживания статуса обращения."
-        )
+        success_message = get_text('report_accepted_api', lang, number=registration_number)
     else:
-        success_message = (
-            "✅ **Обращение принято**\n\n"
-            "Ваше обращение зарегистрировано локально. "
-            "Администратор обработает его в ближайшее время.\n\n"
-            f"📁 **Номер:** `{registration_number}`"
-        )
+        success_message = get_text('report_accepted_local', lang, number=registration_number)
     
     await callback.message.edit_text(
         success_message,
@@ -328,8 +353,8 @@ async def confirm_report(callback: CallbackQuery, state: FSMContext):
     
     # Show main menu again
     await callback.message.answer(
-        "Выберите действие:",
-        reply_markup=get_main_menu_keyboard()
+        get_text('choose_action', lang),
+        reply_markup=get_main_menu_keyboard(lang)
     )
     
     await state.clear()
@@ -340,13 +365,14 @@ async def cancel_report(callback: CallbackQuery, state: FSMContext):
     """Cancel report creation"""
     await callback.answer()
     
-    await callback.message.edit_text(
-        "❌ Подача обращения отменена."
-    )
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    await callback.message.edit_text(get_text('report_cancelled', lang))
     
     await callback.message.answer(
-        "Выберите действие:",
-        reply_markup=get_main_menu_keyboard()
+        get_text('choose_action', lang),
+        reply_markup=get_main_menu_keyboard(lang)
     )
     
     await state.clear()
@@ -375,37 +401,44 @@ async def edit_report(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ReportStates.waiting_for_report_type)
 
 
+@router.callback_query(F.data == "language")
+async def show_language_selection(callback: CallbackQuery, state: FSMContext):
+    """Show language selection"""
+    await callback.answer()
+    
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    await callback.message.edit_text(
+        get_text('select_language', lang),
+        reply_markup=get_language_keyboard(),
+        parse_mode="Markdown"
+    )
+
+
 @router.callback_query(F.data == "info")
-async def show_info(callback: CallbackQuery):
+async def show_info(callback: CallbackQuery, state: FSMContext):
     """Show bot information"""
     await callback.answer()
     
-    info_text = """
-ℹ️ **Информация о системе**
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    info_text = f"""
+{get_text('info_title', lang)}
 
-Система предназначена для приема обращений граждан по вопросам качества государственных услуг в Кыргызской Республике.
+{get_text('info_description', lang)}
 
-**Типы обращений:**
-• 📝 Жалоба - сообщение о нарушениях при предоставлении услуг
-• 💡 Рекомендации - предложения по улучшению качества услуг
+{get_text('info_types', lang)}
 
-**Территориальный охват:**
-• г. Бишкек
-• г. Ош
-• Чуйская область
-• Ошская область
-• Джалал-Абадская область
-• Баткенская область
-• Нарынская область
-• Иссык-Кульская область
-• Таласская область
+{get_text('info_regions', lang)}
 
-Все обращения регистрируются и направляются в соответствующие государственные органы для рассмотрения.
+{get_text('info_processing', lang)}
 """
     
     await callback.message.edit_text(
         info_text,
-        reply_markup=get_main_menu_keyboard(),
+        reply_markup=get_main_menu_keyboard(lang),
         parse_mode="Markdown"
     )
 
