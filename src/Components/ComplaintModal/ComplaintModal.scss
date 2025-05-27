@@ -1,0 +1,327 @@
+@use 'sass:color';
+
+// Variables
+$primary-color: #3a36e0;
+$primary-gradient: linear-gradient(135deg, #3a36e0, #5d3be8);
+$secondary-color: #f0f2f5;
+$text-primary: #333;
+$text-secondary: #666;
+$border-color: #e0e0e0;
+$success-color: #52c41a;
+$warning-color: #faad14;
+$danger-color: #f5222d;
+$info-color: #1890ff;
+$box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+$box-shadow-hover: 0 5px 25px rgba(58, 54, 224, 0.2);
+$transition: all 0.3s ease;
+
+// Модальное окно
+.complaint-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: $transition;
+  
+  &.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    cursor: pointer;
+    z-index: 9998;
+  }
+  
+  .modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    z-index: 10000;
+    overflow: hidden;
+    
+    .open & {
+      transform: translateY(0);
+    }
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid $border-color;
+    background: $primary-gradient;
+    color: white;
+    
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: $transition;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+  
+  .modal-body {
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(90vh - 70px); // Вычитаем высоту header
+    display: flex;
+    flex-direction: column;
+  }
+  
+  // Содержимое модального окна
+  .complaint-info {
+    padding: 24px;
+    flex: 1;
+    
+    .info-section {
+      margin-bottom: 24px;
+      
+      h3 {
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+        color: $text-primary;
+        position: relative;
+        display: inline-block;
+        padding-left: 12px;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 16px;
+          background: $primary-gradient;
+          border-radius: 2px;
+        }
+      }
+      
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+        
+        .info-item {
+          display: flex;
+          flex-direction: column;
+          
+          .label {
+            font-size: 0.75rem;
+            color: $text-secondary;
+            margin-bottom: 4px;
+          }
+          
+          .value {
+            font-size: 0.9rem;
+            color: $text-primary;
+            font-weight: 500;
+          }
+        }
+      }
+      
+      .complaint-text {
+        background-color: $secondary-color;
+        padding: 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: $text-primary;
+        white-space: pre-wrap;
+        min-height: 100px;
+      }
+    }
+  }
+  
+  // Форма редактирования
+  .edit-form {
+    padding: 24px;
+    background-color: rgba($secondary-color, 0.5);
+    border-top: 1px solid $border-color;
+    
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: $text-primary;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+      
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: $text-primary;
+        font-weight: 500;
+      }
+      
+      select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid $border-color;
+        background-color: white;
+        font-size: 0.9rem;
+        transition: $transition;
+        
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        }
+        
+        &.changed {
+          border-color: $info-color;
+          background-color: rgba($info-color, 0.05);
+        }
+      }
+      
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      
+      .change-indicator {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: $info-color;
+        font-style: italic;
+      }
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: $transition;
+        border: none;
+        
+        &.btn-outline {
+          background-color: transparent;
+          border: 1px solid $border-color;
+          color: $text-secondary;
+          
+          &:hover:not(:disabled) {
+            border-color: $primary-color;
+            color: $primary-color;
+          }
+        }
+        
+        &.btn-primary {
+          background: $primary-gradient;
+          color: white;
+          box-shadow: 0 4px 15px rgba($primary-color, 0.3);
+          
+          &:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+            transform: translateY(-2px);
+          }
+        }
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+// Медиа-запросы для адаптивности
+@media (max-width: 768px) {
+  .complaint-modal {
+    .modal-content {
+      width: 95%;
+    }
+    
+    .complaint-info {
+      .info-section {
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+    
+    .edit-form {
+      .form-actions {
+        flex-direction: column;
+        
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Анимации
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+  }
+  to {
+    transform: translateY(0);
+  }
+} 
