@@ -136,7 +136,7 @@ class APIClient:
         # Generate SHA-256 hash
         hash_obj = hashlib.sha256(data.encode())
         # Take first 10 characters of hex digest
-        return f"{hash_obj.hexdigest()[:10]}"
+        return f"{hash_obj.hexdigest()[:16]}"
 
     def _prepare_payload(self, report_data: Dict[str, Any]) -> Dict[str, Any]:
         """

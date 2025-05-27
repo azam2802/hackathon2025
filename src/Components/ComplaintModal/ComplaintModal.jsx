@@ -59,6 +59,32 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
           
           updateData.resolved_at = `${day}.${month}.${year} ${hours}:${minutes}`;
         }
+        
+        // Отправляем уведомление пользователю через Telegram бота
+        if (formData.status === 'resolved' || formData.status === 'cancelled') {
+          try {
+            const response = await fetch('http://localhost:8080/api/notify-status-update', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                report_id: complaint.id,
+                content: complaint.report_text,
+                status: formData.status,
+                notes: formData.notes || '',
+                telegram_user_id: complaint.telegram_user_id,
+                language: complaint.language || 'ru'
+              }),
+            });
+            
+            if (!response.ok) {
+              console.error('Failed to send Telegram notification:', await response.text());
+            }
+          } catch (error) {
+            console.error('Error sending Telegram notification:', error);
+          }
+        }
       }
       
       if (formData.importance !== complaint.importance) {
@@ -237,7 +263,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
               </select>
               {formData.status !== complaint.status && (
                 <div className="change-indicator">
-                  <span>Текущий статус: {getStatusText(complaint.status)}</span>
+                  <span>Текущий статус: { getStatusText(complaint.status)}</span>
                 </div>
               )}
             </div>

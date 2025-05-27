@@ -94,12 +94,16 @@ def save_to_firebase(report_data):
         # Get Firestore client
         db = firestore.client()
         
-        # Add the report to the 'reports' collection
-        db.collection('reports').add(report_data)
+        # Set the document ID to the value of 'rpt'
+        document_id = report_data['rpt']
+        
+        # Add the report to the 'reports' collection with the specified document ID
+        db.collection('reports').document(document_id).set(report_data)
+        
         return True
     except Exception as e:
         print(f"Error saving to Firebase: {str(e)}")
-        return False
+        return False    
 
 def process_report(report_data):
     """Process a report: analyze it and save to Firebase."""
