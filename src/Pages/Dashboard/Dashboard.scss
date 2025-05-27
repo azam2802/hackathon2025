@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Variables
 $primary-color: #3a36e0;
 $primary-gradient: linear-gradient(135deg, #3a36e0, #5d3be8);
@@ -166,15 +168,15 @@ $box-shadow-hover: 0 5px 25px rgba(58, 54, 224, 0.2);
       position: relative;
       
       &.high {
-        background: linear-gradient(90deg, $success-color, lighten($success-color, 10%));
+        background: linear-gradient(90deg, $success-color, color.scale($success-color, $lightness: 10%));
       }
       
       &.medium {
-        background: linear-gradient(90deg, $warning-color, lighten($warning-color, 10%));
+        background: linear-gradient(90deg, $warning-color, color.scale($warning-color, $lightness: 10%));
       }
       
       &.low {
-        background: linear-gradient(90deg, $danger-color, lighten($danger-color, 10%));
+        background: linear-gradient(90deg, $danger-color, color.scale($danger-color, $lightness: 10%));
       }
     }
   }
@@ -232,4 +234,92 @@ $box-shadow-hover: 0 5px 25px rgba(58, 54, 224, 0.2);
 
 .float {
   animation: float 5s ease-in-out infinite;
+}
+
+.map-section {
+  margin-top: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: $box-shadow;
+  
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    .map-controls {
+      display: flex;
+      gap: 1rem;
+      
+      .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        
+        &.active {
+          background: $primary-gradient;
+          color: white;
+          border: none;
+        }
+      }
+    }
+  }
+  
+  .map-container {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 500px;
+    margin-top: 1rem;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid rgba($primary-color, 0.1);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+  }
+  
+  .map-legend {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba($secondary-color, 0.5);
+    border-radius: 4px;
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: $text-secondary;
+      
+      .color-box {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        
+        &.high {
+          background: $success-color;
+        }
+        
+        &.medium {
+          background: $warning-color;
+        }
+        
+        &.low {
+          background: $danger-color;
+        }
+      }
+    }
+  }
 } 

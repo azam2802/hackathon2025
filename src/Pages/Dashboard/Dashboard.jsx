@@ -1,7 +1,22 @@
 import React from 'react'
 import './Dashboard.scss'
+import ComplaintsMap from '../../Components/ComplaintsMap'
 
 const Dashboard = () => {
+  // Тестовые данные для карты
+  const testComplaints = [
+    { latitude: 42.8746, longitude: 74.5698, count: 150, title: "Бишкек" }, // Столица
+    { latitude: 40.5142, longitude: 72.8168, count: 80, title: "Ош" },  // Южная столица
+    { latitude: 42.4602, longitude: 76.1879, count: 30, title: "Иссык-Куль" },  // Туристический регион
+    { latitude: 42.8333, longitude: 75.2833, count: 20, title: "Нарын" },  // Горный регион
+    { latitude: 41.4167, longitude: 75.9833, count: 60, title: "Джалал-Абад" },  // Южный регион
+    { latitude: 42.5000, longitude: 72.2500, count: 45, title: "Талас" },  // Западный регион
+    { latitude: 42.8500, longitude: 74.6000, count: 90, title: "Чуй" },  // Северный регион
+    { latitude: 40.9333, longitude: 73.0000, count: 35, title: "Баткен" },  // Юго-западный регион
+    { latitude: 41.2000, longitude: 75.8000, count: 25, title: "Токтогул" },  // Горный регион
+    { latitude: 42.6500, longitude: 76.2000, count: 40, title: "Каракол" },  // Восточный регион
+  ];
+
   return (
     <div className="dashboard-page fade-in">
       <div className="page-title" data-aos="fade-down">
@@ -103,6 +118,34 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      
+      {/* <div className="dashboard-section map-section" data-aos="fade-up" data-aos-delay="600">
+        <div className="section-title">
+          <h2>География обращений</h2>
+          <div className="map-controls">
+            <button className="btn btn-outline active">Все обращения</button>
+            <button className="btn btn-outline">Проблемные</button>
+            <button className="btn btn-outline">Решенные</button>
+          </div>
+        </div>
+        <div className="map-container">
+          <ComplaintsMap complaints={testComplaints} />
+        </div>
+        <div className="map-legend">
+          <div className="legend-item">
+            <div className="color-box high"></div>
+            <span>Много обращений</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box medium"></div>
+            <span>Среднее количество</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box low"></div>
+            <span>Мало обращений</span>
+          </div>
+        </div>
+      </div> */}
       
       <div className="dashboard-section" data-aos="fade-up" data-aos-delay="500">
         <h2 className="section-title">Проблемные услуги</h2>

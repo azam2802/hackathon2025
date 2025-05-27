@@ -1,63 +1,69 @@
-import React from 'react'
-import { Outlet, NavLink } from 'react-router-dom'
-import './Layout.scss'
+import React, { useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import './Layout.scss';
 import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
 
 const Layout = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const location = useLocation();
+
+  const menuItems = [
+    { path: '/dashboard', icon: '📊', label: 'Дашборд' },
+    { path: '/dashboard/complaints', icon: '📝', label: 'Обращения' },
+    { path: '/dashboard/services', icon: '🛠️', label: 'Услуги' },
+    { path: '/dashboard/reports', icon: '📈', label: 'Отчеты' },
+    { path: '/dashboard/analytics', icon: '📊', label: 'Аналитика' },
+  ];
+
   return (
-    <div className="app-layout">
+    <div className="layout">
       <ParticlesBackground />
       
-      <header className="header">
-        <div className="container">
-          <div className="logo">
-            <img src="/logo-gov.svg" alt="ГосАналитика" />
-            <span>ГосАналитика</span>
-          </div>
-          
-          <nav>
-            <NavLink to="/" end>
-              <span className="nav-icon">📊</span>
-              <span>Дашборд</span>
-            </NavLink>
-            <NavLink to="/complaints">
-              <span className="nav-icon">📝</span>
-              <span>Обращения</span>
-            </NavLink>
-            <NavLink to="/services">
-              <span className="nav-icon">🔍</span>
-              <span>Услуги</span>
-            </NavLink>
-            <NavLink to="/reports">
-              <span className="nav-icon">📈</span>
-              <span>Отчеты</span>
-            </NavLink>
-            <NavLink to="/analytics">
-              <span className="nav-icon">📊</span>
-              <span>Аналитика</span>
-            </NavLink>
-          </nav>
-          
-          <div className="user-menu">
-            <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
-            <span className="username">Администратор</span>
-          </div>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-header">
+          <h2>Система анализа</h2>
+          <button 
+            className="toggle-btn"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? '◀' : '▶'}
+          </button>
         </div>
-      </header>
-      
-      <main className="main-content">
+        
+        <nav className="sidebar-nav">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {isSidebarOpen && <span className="nav-label">{item.label}</span>}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <Link to="/" className="home-link">
+            <span className="nav-icon">🏠</span>
+            {isSidebarOpen && <span>На главную</span>}
+          </Link>
+        </div>
+      </aside>
+
+      <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="container">
           <Outlet />
         </div>
       </main>
       
-      <footer className="footer">
+      <footer className={`footer ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} - ГосАналитика | Система анализа эффективности государственных услуг</p>
+          <p>&copy; 2025 - ГосАналитика | Система анализа эффективности государственных услуг</p>
         </div>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default Layout 
+export default Layout; 
