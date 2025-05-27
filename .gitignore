@@ -6,7 +6,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
 node_modules
 dist
 dist-ssr
@@ -35,3 +34,5 @@ dist-ssr
 tg_bot/reports/
 .env
 tg_bot/__pycache__
+
+/publicpulse-2025-adf4c6e9d3e0.json

@@ -42,7 +42,11 @@ def analyze_report_text(report_text):
     {services_list}
 
     Return ONLY a JSON object in this exact format:
-    {{"service": "exact service name from list", "agency": "corresponding agency name"}}"""
+    {{"service": "exact service name from list", "agency": "corresponding agency name"}}
+    
+    if you deem the report text does not belong to any of the services, or does not contain any relevant information, return:
+    {{"service": "Spam", "agency": "Spam"}}
+    """
 
     try:
         # Get response from OpenAI
