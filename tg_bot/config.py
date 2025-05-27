@@ -6,10 +6,10 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", 0))
 
-# API Configuration
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.example.com")
+# Django Backend API Configuration
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 API_KEY = os.getenv("API_KEY", "")
-API_ENABLED = os.getenv("API_ENABLED", "false").lower() == "true"
+API_ENABLED = os.getenv("API_ENABLED", "true").lower() == "true"
 
 # Kyrgyzstan regions and cities with coordinates
 REGIONS_CITIES = {

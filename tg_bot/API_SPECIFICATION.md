@@ -1,20 +1,38 @@
-# API Specification для Backend интеграции
+# API Specification для Django Backend интеграции
 
 ## Обзор
 
-Telegram бот отправляет обращения граждан на backend API через HTTP POST запросы. Этот документ описывает требуемые endpoints и форматы данных.
+Telegram бот интегрирован с Django REST API backend, который обрабатывает обращения граждан с помощью OpenAI для классификации по государственным услугам и сохраняет их в Firebase Firestore.
 
 ## Endpoints
 
-### 1. Отправка обращения
+### 1. Health Check
 
-**Endpoint:** `POST /api/reports`
+**Endpoint:** `GET /api/hello/`
+
+**Headers:**
+```
+User-Agent: GovServices-TelegramBot/1.0
+Accept: application/json
+```
+
+**Response (Success - 200 OK):**
+```json
+{
+  "message": "Hello, World!"
+}
+```
+
+### 2. Отправка обращения
+
+**Endpoint:** `POST /api/reports/`
 
 **Headers:**
 ```
 Content-Type: application/json
-Authorization: Bearer {API_KEY}
 User-Agent: GovServices-TelegramBot/1.0
+Accept: application/json
+Authorization: Bearer {API_KEY} (optional)
 ```
 
 **Request Body:**
@@ -23,29 +41,31 @@ User-Agent: GovServices-TelegramBot/1.0
   "report_type": "Жалоба",
   "region": "Бишкек",
   "city": "Бишкек",
-  "content": "Текст обращения от пользователя",
+  "report_text": "Текст обращения от пользователя",
   "contact_info": "ФИО пользователя",
   "telegram_user_id": 123456789,
   "telegram_username": "username",
-  "location": {
-    "latitude": 42.8746,
-    "longitude": 74.5698,
-    "address": "Бишкек, Кыргызстан",
-    "source": "city_selection"
-  },
+  "latitude": 42.8746,
+  "longitude": 74.5698,
+  "address": "Бишкек, Кыргызстан",
+  "location_source": "city_selection",
   "created_at": "25.01.2025 14:30",
-  "source": "telegram_bot",
-  "version": "1.0"
+  "submission_source": "telegram_bot",
+  "language": "ru"
 }
 ```
 
-**Response (Success - 200 OK):**
+**Response (Success - 201 CREATED):**
 ```json
 {
-  "id": "REP-2025-001234",
-  "status": "registered",
-  "created_at": "2025-01-25T14:30:00Z",
-  "message": "Report registered successfully"
+  "report_type": "Жалоба",
+  "region": "Бишкек",
+  "city": "Бишкек",
+  "report_text": "Текст обращения от пользователя",
+  "contact_info": "ФИО пользователя",
+  "telegram_user_id": 123456789,
+  "service": "Получение загранпаспорта",
+  "agency": "ГРС"
 }
 ```
 
