@@ -4,7 +4,7 @@ import './Complaints.scss'
 const Complaints = () => {
   return (
     <div className="complaints-page fade-in">
-      <div className="page-title">
+      <div className="page-title" data-aos="fade-down">
         <h1>Анализ обращений граждан</h1>
         <div className="actions">
           <button className="btn btn-primary">Добавить обращение</button>
@@ -12,7 +12,7 @@ const Complaints = () => {
         </div>
       </div>
       
-      <div className="filters-bar">
+      <div className="filters-bar" data-aos="fade-up" data-aos-delay="100">
         <div className="search-input">
           <span className="search-icon">🔍</span>
           <input type="text" placeholder="Поиск по обращениям..." />
@@ -54,25 +54,25 @@ const Complaints = () => {
       </div>
       
       <div className="complaints-stats">
-        <div className="stat-item">
+        <div className="stat-item" data-aos="flip-up" data-aos-delay="200">
           <span className="stat-value">1,245</span>
           <span className="stat-label">Всего</span>
         </div>
-        <div className="stat-item">
+        <div className="stat-item" data-aos="flip-up" data-aos-delay="300">
           <span className="stat-value">328</span>
           <span className="stat-label">Новые</span>
         </div>
-        <div className="stat-item">
+        <div className="stat-item" data-aos="flip-up" data-aos-delay="400">
           <span className="stat-value">527</span>
           <span className="stat-label">В работе</span>
         </div>
-        <div className="stat-item">
+        <div className="stat-item" data-aos="flip-up" data-aos-delay="500">
           <span className="stat-value">390</span>
           <span className="stat-label">Решенные</span>
         </div>
       </div>
       
-      <div className="complaint-list">
+      <div className="complaint-list" data-aos="fade-up" data-aos-delay="300">
         <table className="data-table">
           <thead>
             <tr>
@@ -86,7 +86,7 @@ const Complaints = () => {
             </tr>
           </thead>
           <tbody>
-            <tr>
+            <tr data-aos="fade-right" data-aos-delay="100">
               <td>#12458</td>
               <td>Долгое ожидание загранпаспорта</td>
               <td>Получение загранпаспорта</td>
@@ -100,7 +100,7 @@ const Complaints = () => {
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr data-aos="fade-right" data-aos-delay="200">
               <td>#12457</td>
               <td>Ошибка в документах при регистрации</td>
               <td>Регистрация прав собственности</td>
@@ -114,7 +114,7 @@ const Complaints = () => {
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr data-aos="fade-right" data-aos-delay="300">
               <td>#12456</td>
               <td>Некорректная информация о пособиях</td>
               <td>Оформление пособий</td>
@@ -128,7 +128,7 @@ const Complaints = () => {
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr data-aos="fade-right" data-aos-delay="400">
               <td>#12455</td>
               <td>Проблема с записью в детский сад</td>
               <td>Запись в детский сад</td>
@@ -142,7 +142,7 @@ const Complaints = () => {
                 </div>
               </td>
             </tr>
-            <tr>
+            <tr data-aos="fade-right" data-aos-delay="500">
               <td>#12454</td>
               <td>Отказ в регистрации автомобиля</td>
               <td>Регистрация транспортного средства</td>
@@ -160,7 +160,7 @@ const Complaints = () => {
         </table>
       </div>
       
-      <div className="pagination">
+      <div className="pagination" data-aos="fade-up" data-aos-delay="600">
         <button className="btn btn-sm btn-outline">Назад</button>
         <div className="page-numbers">
           <button className="btn btn-sm btn-outline active">1</button>
