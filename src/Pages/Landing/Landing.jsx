@@ -21,12 +21,11 @@ const Landing = () => {
       <section className="landing-hero">
         <div className="hero-left">
           <h1>
-            Оставьте жалобу <br />
-            <span className="accent">быстро, удобно, анонимно</span>
+            Public Pulse <br />
+            <span className="accent">голос граждан, видимый каждому</span>
           </h1>
           <p className="hero-subtitle">
-            Платформа для подачи и отслеживания обращений граждан. Ваш голос будет услышан!
-          </p>
+Платформа для выявления неэффективных госуслуг через анализ жалоб и обращений.          </p>
           <div className="hero-actions">
             <a href="/complaints" className="btn btn-primary">Оставить жалобу</a>
             <a href="#about" className="btn btn-outline">Узнать больше</a>
