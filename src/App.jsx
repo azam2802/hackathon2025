@@ -9,11 +9,13 @@ import { AuthProvider } from './contexts/AuthContext'
 import Login from './Pages/Auth/Login'
 import Register from './Pages/Auth/Register'
 import ParticlesBackground from './Components/ParticlesBackground/ParticlesBackground'
+import Landing from './Pages/Landing/Landing'
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/landing" element={<Landing />} />
         <Route path="/login" element={
           <div className="auth-only-layout">
             <ParticlesBackground />
