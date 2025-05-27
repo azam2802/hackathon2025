@@ -2,8 +2,6 @@ import json
 import os
 from openai import OpenAI
 from firebase_admin import firestore
-from datetime import datetime
-from django.conf import settings
 from dotenv import load_dotenv
 
 
@@ -42,10 +40,10 @@ def analyze_report_text(report_text):
     {services_list}
 
     Return ONLY a JSON object in this exact format:
-    {{"service": "exact service name from list", "agency": "corresponding agency name"}}
+    {{"service": "exact service name from list", "agency": "corresponding agency name", "importance": "low, medium, high"}}
     
     if you deem the report text does not belong to any of the services, or does not contain any relevant information, return:
-    {{"service": "Spam", "agency": "Spam"}}
+    {{"service": "Spam", "agency": "Spam", "importance": "low"}}
     """
 
     try:
@@ -69,7 +67,7 @@ def analyze_report_text(report_text):
             result = json.loads(response_content)
             if not isinstance(result, dict) or 'service' not in result or 'agency' not in result:
                 print("Invalid response format - missing required fields")
-                return {"service": "Spam", "agency": "Spam"}
+                return {"service": "Spam", "agency": "Spam", "importance": "low"}
             
             # Verify the service exists in our list
             service_exists = any(item['service'] == result['service'] and item['agency'] == result['agency'] 
@@ -77,18 +75,18 @@ def analyze_report_text(report_text):
             
             if not service_exists:
                 print(f"Service/Agency pair not found in our list: {result}")
-                return {"service": "Spam", "agency": "Spam"}
+                return {"service": "Spam", "agency": "Spam", "importance": "low"}
                 
             return result
         except json.JSONDecodeError as e:
             print(f"JSON parsing error: {str(e)}")
-            return {"service": "Unknown", "agency": "Unknown"}
+            return {"service": "Unknown", "agency": "Unknown", "importance": "low"}
     except ValueError as e:
         print(f"OpenAI client error: {str(e)}")
-        return {"service": "Unknown", "agency": "Unknown"}
+        return {"service": "Unknown", "agency": "Unknown", "importance": "low"}
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        return {"service": "Unknown", "agency": "Unknown"}
+        return {"service": "Unknown", "agency": "Unknown", "importance": "low"}
 
 def save_to_firebase(report_data):
     """Save the report data to Firebase Firestore."""
@@ -111,6 +109,7 @@ def process_report(report_data):
     # Add the analysis results to the report data
     report_data['service'] = analysis_result['service']
     report_data['agency'] = analysis_result['agency']
+    report_data['importance'] = analysis_result['importance']
     
     # Save to Firebase
     success = save_to_firebase(report_data)
