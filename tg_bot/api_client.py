@@ -1,6 +1,7 @@
 import aiohttp
 import json
 import logging
+import hashlib
 from typing import Dict, Any, Optional
 from config import BOT_TOKEN, API_BASE_URL, API_KEY
 
@@ -58,7 +59,7 @@ class APIClient:
                 if response.status == 201:  # Django returns 201 for created
                     result = await response.json()
                     # Generate a unique ID for tracking
-                    report_id = f"RPT-{payload['telegram_user_id']}-{int(result.get('telegram_user_id', 0))}"
+                    report_id = f"RPT-{payload['rpt']}"
                     logging.info(f"Report sent successfully to Django backend")
                     return {
                         'success': True,
@@ -73,7 +74,7 @@ class APIClient:
                     }
                 elif response.status == 200:  # Fallback for 200 OK
                     result = await response.json()
-                    report_id = f"RPT-{payload['telegram_user_id']}-{int(result.get('telegram_user_id', 0))}"
+                    report_id = f"RPT-{payload['rpt']}"
                     logging.info(f"Report sent successfully to Django backend")
                     return {
                         'success': True,
@@ -119,6 +120,24 @@ class APIClient:
                 'message': 'Unexpected error occurred'
             }
     
+    def _generate_rpt_hash(self, user_id: str, timestamp: str) -> str:
+        """
+        Generate a unique RPT hash using user ID and timestamp
+        
+        Args:
+            user_id: Telegram user ID
+            timestamp: Report creation timestamp
+            
+        Returns:
+            Unique RPT hash string
+        """
+        # Combine user ID and timestamp
+        data = f"{user_id}:{timestamp}"
+        # Generate SHA-256 hash
+        hash_obj = hashlib.sha256(data.encode())
+        # Take first 10 characters of hex digest
+        return f"{hash_obj.hexdigest()[:10]}"
+
     def _prepare_payload(self, report_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Prepare report data for Django backend API submission
@@ -130,9 +149,16 @@ class APIClient:
             Formatted payload for Django API
         """
         location = report_data.get('location', {})
+        created_at = report_data.get('created_at')
+        user_id = report_data.get('user_id')
+        
+        # Generate RPT hash
+        rpt_hash = self._generate_rpt_hash(str(user_id), str(created_at))
         
         # Format payload according to Django backend expectations
         payload = {
+            'rpt': rpt_hash,  # Add RPT hash to payload
+            'status': 'pending',
             'report_type': report_data.get('type'),
             'region': report_data.get('region'),
             'city': report_data.get('city'),
@@ -144,7 +170,7 @@ class APIClient:
             'longitude': location.get('longitude'),
             'address': location.get('address', ''),
             'location_source': location.get('source', 'city_selection'),
-            'created_at': report_data.get('created_at'),
+            'created_at': created_at,
             'submission_source': 'telegram_bot',
             'language': report_data.get('language', 'ru')
         }
