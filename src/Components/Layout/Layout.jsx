@@ -1,5 +1,5 @@
 import React from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
 import './Layout.scss'
 
 const Layout = () => {
@@ -7,9 +7,23 @@ const Layout = () => {
     <div className="app-layout">
       <header className="header">
         <div className="container">
+          <div className="logo">
+            <img src="/logo-gov.svg" alt="ГосАналитика" />
+            <span>ГосАналитика</span>
+          </div>
+          
           <nav>
-            {/* Navigation will go here */}
+            <NavLink to="/" end>Дашборд</NavLink>
+            <NavLink to="/complaints">Обращения</NavLink>
+            <NavLink to="/services">Услуги</NavLink>
+            <NavLink to="/reports">Отчеты</NavLink>
+            <NavLink to="/analytics">Аналитика</NavLink>
           </nav>
+          
+          <div className="user-menu">
+            <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
+            <span className="username">Администратор</span>
+          </div>
         </div>
       </header>
       
@@ -21,7 +35,7 @@ const Layout = () => {
       
       <footer className="footer">
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} - My App</p>
+          <p>&copy; {new Date().getFullYear()} - ГосАналитика | Система анализа эффективности государственных услуг</p>
         </div>
       </footer>
     </div>
