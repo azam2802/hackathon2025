@@ -94,12 +94,12 @@ const Dashboard = () => {
       <div className="dashboard-cards">
         <div className="card" data-aos="zoom-in" data-aos-delay="200">
           <div className="card-title">Всего обращений</div>
-          <div className="card-value">{loading ? 'Загрузка...' : (reportsCount ?? 0).toLocaleString()}</div>
+          <div className="card-value">{loading ? 'Загрузка...' : reportsCount.toLocaleString()}</div>
         </div>
         
         <div className="card" data-aos="zoom-in" data-aos-delay="300">
           <div className="card-title">Решенные обращения</div>
-          <div className="card-value">{loading ? 'Загрузка...' : (resolvedCount ?? 0).toLocaleString()}</div>
+          <div className="card-value">{loading ? 'Загрузка...' : resolvedCount.toLocaleString()}</div>
         </div>
         
         <div className="card" data-aos="zoom-in" data-aos-delay="400">
