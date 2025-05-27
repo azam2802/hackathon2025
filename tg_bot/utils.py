@@ -16,9 +16,7 @@ async def format_report(report_data: Dict[str, Any], lang: str = 'ru') -> str:
     region_field = get_text('report_region_field', lang, region=get_region_name(report_data.get('region', 'Не указан'), lang))
     city_field = get_text('report_city_field', lang, city=report_data.get('city', 'Не указан'))
     contact_field = get_text('report_contact_field', lang, contact=report_data.get('user_name', 'Не указано'))
-    userid_field = get_text('report_userid_field', lang, user_id=report_data.get('user_id', 'Не указан'))
     content_field = get_text('report_content_field', lang, content=report_data.get('report_text', 'Не указан'))
-    location_field = get_text('report_location_field', lang, location=format_location_info(report_data.get('location'), lang))
     date_field = get_text('report_date_field', lang, date=report_data.get('created_at', datetime.now().strftime('%d.%m.%Y %H:%M')))
     
     report_text = f"""
@@ -29,11 +27,8 @@ async def format_report(report_data: Dict[str, Any], lang: str = 'ru') -> str:
 {city_field}
 
 {contact_field}
-{userid_field}
 
 {content_field}
-
-{location_field}
 
 {date_field}
 """

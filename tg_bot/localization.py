@@ -58,6 +58,8 @@ TRANSLATIONS = {
 📁 **Номер:** `{number}`""",
         
         # Navigation
+        'back_to_main': '⬅️ Главное меню',
+        'back_to_report_types': '⬅️ Тип обращения',
         'back_to_regions': '⬅️ Вернуться к регионам',
         
         # Commands and help
@@ -112,9 +114,7 @@ TRANSLATIONS = {
         'report_region_field': '🌍 **Регион:** {region}',
         'report_city_field': '🏙️ **Населенный пункт:** {city}',
         'report_contact_field': '👤 **Контактные данные:** {contact}',
-        'report_userid_field': '📱 **ID пользователя:** {user_id}',
         'report_content_field': '📝 **Содержание обращения:**\n{content}',
-        'report_location_field': '📍 **Местоположение:**\n{location}',
         'report_date_field': '🕐 **Дата регистрации:** {date}',
     },
     
@@ -168,6 +168,8 @@ TRANSLATIONS = {
 📁 **Номери:** `{number}`""",
         
         # Navigation
+        'back_to_main': '⬅️ Башкы меню',
+        'back_to_report_types': '⬅️ Кайрылуунун түрү',
         'back_to_regions': '⬅️ Аймактарга кайтуу',
         
         # Commands and help
@@ -222,9 +224,7 @@ TRANSLATIONS = {
         'report_region_field': '🌍 **Аймаk:** {region}',
         'report_city_field': '🏙️ **Кала:** {city}',
         'report_contact_field': '👤 **Байланыш маалыматтары:** {contact}',
-        'report_userid_field': '📱 **Колдонуuчунун ID:** {user_id}',
         'report_content_field': '📝 **Кайрылуuнун мазмуну:**\n{content}',
-        'report_location_field': '📍 **Жайгашкан жери:**\n{location}',
         'report_date_field': '🕐 **Каттоо датасы:** {date}',
     }
 }

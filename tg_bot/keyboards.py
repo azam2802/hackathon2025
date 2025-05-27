@@ -15,6 +15,12 @@ def get_report_types_keyboard(lang: str = 'ru') -> InlineKeyboardMarkup:
             callback_data=f"report_type:{report_type}"
         ))
     
+    # Add back to main menu button
+    builder.add(InlineKeyboardButton(
+        text=get_text('back_to_main', lang),
+        callback_data="back_to_main"
+    ))
+    
     builder.adjust(1)
     return builder.as_markup()
 
@@ -29,6 +35,12 @@ def get_regions_keyboard(lang: str = 'ru') -> InlineKeyboardMarkup:
             text=localized_name,
             callback_data=f"region:{region}"
         ))
+    
+    # Add back to report types button
+    builder.add(InlineKeyboardButton(
+        text=get_text('back_to_report_types', lang),
+        callback_data="back_to_report_types"
+    ))
     
     builder.adjust(2)
     return builder.as_markup()
