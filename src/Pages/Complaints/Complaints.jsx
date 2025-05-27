@@ -1,14 +1,25 @@
 import React from 'react'
 import './Complaints.scss'
+import { useFetchComplaints } from '../../Hooks/useFetchComplaints'
 
 const Complaints = () => {
+  const { loading, error, complaints, stats, refreshData } = useFetchComplaints();
+
+  if (loading) {
+    return <div className="loading">Загрузка данных...</div>;
+  }
+
+  if (error) {
+    return <div className="error">Ошибка при загрузке данных: {error}</div>;
+  }
+
   return (
     <div className="complaints-page fade-in">
       <div className="page-title" data-aos="fade-down">
         <h1>Анализ обращений граждан</h1>
         <div className="actions">
           <button className="btn btn-primary">Добавить обращение</button>
-          <button className="btn btn-outline">Экспорт</button>
+          <button className="btn btn-outline" onClick={refreshData}>Обновить данные</button>
         </div>
       </div>
       
@@ -26,7 +37,6 @@ const Complaints = () => {
               <option value="new">Новые</option>
               <option value="in-progress">В работе</option>
               <option value="resolved">Решенные</option>
-              <option value="cancelled">Отмененные</option>
             </select>
           </div>
           
@@ -34,10 +44,11 @@ const Complaints = () => {
             <select defaultValue="">
               <option value="" disabled>Услуга</option>
               <option value="all">Все услуги</option>
-              <option value="registration">Регистрация прав</option>
-              <option value="passport">Загранпаспорт</option>
-              <option value="kindergarten">Детский сад</option>
-              <option value="benefits">Пособия</option>
+              {complaints.map(complaint => (
+                <option key={complaint.service} value={complaint.service}>
+                  {complaint.service}
+                </option>
+              ))}
             </select>
           </div>
           
@@ -55,19 +66,19 @@ const Complaints = () => {
       
       <div className="complaints-stats">
         <div className="stat-item" data-aos="flip-up" data-aos-delay="200">
-          <span className="stat-value">1,245</span>
+          <span className="stat-value">{stats.total}</span>
           <span className="stat-label">Всего</span>
         </div>
         <div className="stat-item" data-aos="flip-up" data-aos-delay="300">
-          <span className="stat-value">328</span>
+          <span className="stat-value">{stats.new}</span>
           <span className="stat-label">Новые</span>
         </div>
         <div className="stat-item" data-aos="flip-up" data-aos-delay="400">
-          <span className="stat-value">527</span>
+          <span className="stat-value">{stats.inProgress}</span>
           <span className="stat-label">В работе</span>
         </div>
         <div className="stat-item" data-aos="flip-up" data-aos-delay="500">
-          <span className="stat-value">390</span>
+          <span className="stat-value">{stats.resolved}</span>
           <span className="stat-label">Решенные</span>
         </div>
       </div>
@@ -86,76 +97,22 @@ const Complaints = () => {
             </tr>
           </thead>
           <tbody>
-            <tr data-aos="fade-right" data-aos-delay="100">
-              <td>#12458</td>
-              <td>Долгое ожидание загранпаспорта</td>
-              <td>Получение загранпаспорта</td>
-              <td>15.05.2023</td>
-              <td><span className="priority high">Высокий</span></td>
-              <td><span className="status warning">В работе</span></td>
-              <td>
-                <div className="actions-cell">
-                  <button className="btn btn-sm">Просмотр</button>
-                  <button className="btn btn-sm">Анализ</button>
-                </div>
-              </td>
-            </tr>
-            <tr data-aos="fade-right" data-aos-delay="200">
-              <td>#12457</td>
-              <td>Ошибка в документах при регистрации</td>
-              <td>Регистрация прав собственности</td>
-              <td>14.05.2023</td>
-              <td><span className="priority critical">Критический</span></td>
-              <td><span className="status warning">В работе</span></td>
-              <td>
-                <div className="actions-cell">
-                  <button className="btn btn-sm">Просмотр</button>
-                  <button className="btn btn-sm">Анализ</button>
-                </div>
-              </td>
-            </tr>
-            <tr data-aos="fade-right" data-aos-delay="300">
-              <td>#12456</td>
-              <td>Некорректная информация о пособиях</td>
-              <td>Оформление пособий</td>
-              <td>14.05.2023</td>
-              <td><span className="priority medium">Средний</span></td>
-              <td><span className="status warning">В работе</span></td>
-              <td>
-                <div className="actions-cell">
-                  <button className="btn btn-sm">Просмотр</button>
-                  <button className="btn btn-sm">Анализ</button>
-                </div>
-              </td>
-            </tr>
-            <tr data-aos="fade-right" data-aos-delay="400">
-              <td>#12455</td>
-              <td>Проблема с записью в детский сад</td>
-              <td>Запись в детский сад</td>
-              <td>13.05.2023</td>
-              <td><span className="priority medium">Средний</span></td>
-              <td><span className="status normal">Решено</span></td>
-              <td>
-                <div className="actions-cell">
-                  <button className="btn btn-sm">Просмотр</button>
-                  <button className="btn btn-sm">Анализ</button>
-                </div>
-              </td>
-            </tr>
-            <tr data-aos="fade-right" data-aos-delay="500">
-              <td>#12454</td>
-              <td>Отказ в регистрации автомобиля</td>
-              <td>Регистрация транспортного средства</td>
-              <td>12.05.2023</td>
-              <td><span className="priority high">Высокий</span></td>
-              <td><span className="status normal">Решено</span></td>
-              <td>
-                <div className="actions-cell">
-                  <button className="btn btn-sm">Просмотр</button>
-                  <button className="btn btn-sm">Анализ</button>
-                </div>
-              </td>
-            </tr>
+            {complaints.map((complaint, index) => (
+              <tr key={complaint.id} data-aos="fade-right" data-aos-delay={100 * (index + 1)}>
+                <td>#{complaint.id}</td>
+                <td>{complaint.title}</td>
+                <td>{complaint.service}</td>
+                <td>{complaint.date}</td>
+                <td><span className={`priority ${complaint.priority}`}>{complaint.priority}</span></td>
+                <td><span className={`status ${complaint.status}`}>{complaint.status}</span></td>
+                <td>
+                  <div className="actions-cell">
+                    <button className="btn btn-sm">Просмотр</button>
+                    <button className="btn btn-sm">Анализ</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
