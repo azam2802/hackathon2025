@@ -312,7 +312,8 @@ $glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 // Main Content
 .main-content {
   flex: 1;
-  padding: 84px 0 20px;
+  padding: 84px 0 20px 32px;
+  position: relative;
   
   .container {
     background-color: $glass-bg;
@@ -1003,5 +1004,209 @@ $glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     text-shadow:
       .25em 0 0 $primary-color,
       .5em 0 0 $primary-color;
+  }
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background: $glass-bg;
+  box-shadow: $glass-shadow;
+  border-right: $glass-border;
+  display: flex;
+  flex-direction: column;
+  z-index: 1100;
+  padding: 32px 0 0 0;
+  transition: width 0.2s;
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+    img {
+      height: 40px;
+      filter: drop-shadow(0 0 5px rgba(58, 54, 224, 0.5));
+    }
+    span {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: $primary-color;
+      letter-spacing: 1px;
+    }
+  }
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    padding: 0 16px;
+    a {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      color: $text-secondary;
+      font-size: 1.08rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      .sidebar-icon {
+        font-size: 1.5rem;
+        color: $primary-color;
+        transition: color 0.2s;
+      }
+      &:hover {
+        background: rgba($primary-color, 0.08);
+        color: $primary-color;
+        .sidebar-icon {
+          color: $primary-color;
+        }
+      }
+      &.active {
+        background: $primary-gradient;
+        color: #fff;
+        box-shadow: $box-shadow-hover;
+        .sidebar-icon {
+          color: #fff;
+        }
+      }
+    }
+  }
+  .sidebar-footer {
+    padding: 24px 16px 32px 16px;
+    border-top: 1px solid $border-color;
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid $primary-color;
+      }
+      .username {
+        font-weight: 500;
+        color: $primary-color;
+        font-size: 1rem;
+      }
+    }
+    .admin-panel-button {
+      width: 100%;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 8px 0;
+      border-radius: 8px;
+      font-size: 0.98rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      &:hover {
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+      }
+    }
+    .logout-button {
+      width: 100%;
+      background: $danger-color;
+      color: white;
+      border: none;
+      padding: 8px 0;
+      border-radius: 8px;
+      font-size: 0.98rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      transition: all 0.2s;
+      .sidebar-icon {
+        font-size: 1.3rem;
+      }
+      &:hover {
+        background: color.adjust($danger-color, $lightness: -10%);
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+.sidebar.closed {
+  width: 70px;
+  .sidebar-logo span,
+  .sidebar-user .username,
+  .sidebar-nav a span,
+  .admin-panel-button span,
+  .logout-button span {
+    display: none;
+  }
+  .sidebar-logo,
+  .sidebar-user {
+    justify-content: center;
+  }
+  .sidebar-nav a {
+    justify-content: center;
+    padding: 12px 0;
+  }
+  .sidebar-footer {
+    padding: 16px 0;
+  }
+}
+
+.sidebar-nav a .sidebar-icon {
+  color: #888 !important;
+  transition: color 0.2s;
+}
+
+.sidebar-nav a.active .sidebar-icon {
+  color: #fff !important;
+}
+
+.main-layout-content {
+  margin-left: 250px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.2s;
+}
+
+.burger-menu {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  z-index: 1200;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 6px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.burger-menu:hover {
+  background: $secondary-color;
+}
+
+@media (max-width: 900px) {
+  .main-layout-content {
+    margin-left: 70px !important;
+  }
+  .main-content {
+    padding-left: 16px;
+  }
+  .sidebar {
+    width: 70px;
   }
 }
