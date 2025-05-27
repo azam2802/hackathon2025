@@ -17,7 +17,7 @@ from utils import (
     validate_report_data, escape_markdown, get_city_coordinates
 )
 from config import ADMIN_USER_ID, API_ENABLED
-from api_client import send_report_to_api
+from api_client import send_report_to_api, check_backend_health
 from localization import get_text, get_user_language, get_region_name, get_report_type_name
 
 router = Router()
@@ -162,16 +162,66 @@ async def process_region(callback: CallbackQuery, state: FSMContext):
     """Process region selection"""
     await callback.answer()
     
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
     region = callback.data.split(":", 1)[1]
     await state.update_data(region=region)
     
+    localized_region = get_region_name(region, lang)
+    
     await callback.message.edit_text(
-        f"✅ Регион: **{region}**\n\nВыберите населенный пункт:",
-        reply_markup=get_cities_keyboard(region),
+        get_text('select_city', lang, region=localized_region),
+        reply_markup=get_cities_keyboard(region, lang),
         parse_mode="Markdown"
     )
     
     await state.set_state(ReportStates.waiting_for_city)
+
+
+@router.callback_query(F.data == "back_to_main")
+async def back_to_main(callback: CallbackQuery, state: FSMContext):
+    """Go back to main menu"""
+    await callback.answer()
+    
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    # Preserve language setting but clear other data
+    await state.clear()
+    await state.update_data(language=lang)
+    
+    await callback.message.edit_text(
+        get_text('choose_action', lang),
+        reply_markup=get_main_menu_keyboard(lang)
+    )
+
+
+@router.callback_query(F.data == "back_to_report_types")
+async def back_to_report_types(callback: CallbackQuery, state: FSMContext):
+    """Go back to report type selection"""
+    await callback.answer()
+    
+    data = await state.get_data()
+    lang = get_user_language(data)
+    
+    # Keep user data but clear report-specific data
+    await state.update_data(
+        type=None,
+        region=None,
+        city=None,
+        report_text=None,
+        user_name=None,
+        location=None
+    )
+    
+    await callback.message.edit_text(
+        get_text('creating_report', lang),
+        reply_markup=get_report_types_keyboard(lang),
+        parse_mode="Markdown"
+    )
+    
+    await state.set_state(ReportStates.waiting_for_report_type)
 
 
 @router.callback_query(F.data == "back_to_regions")
@@ -180,11 +230,21 @@ async def back_to_regions(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     
     data = await state.get_data()
+    lang = get_user_language(data)
     report_type = data.get('type', 'Не выбран')
     
+    # Clear region and city data
+    await state.update_data(
+        region=None,
+        city=None,
+        location=None
+    )
+    
+    localized_type = get_report_type_name(report_type, lang) if report_type != 'Не выбран' else report_type
+    
     await callback.message.edit_text(
-        f"✅ Тип обращения: **{report_type}**\n\nВыберите регион:",
-        reply_markup=get_regions_keyboard(),
+        get_text('select_region', lang, type=localized_type),
+        reply_markup=get_regions_keyboard(lang),
         parse_mode="Markdown"
     )
     
@@ -300,17 +360,26 @@ async def confirm_report(callback: CallbackQuery, state: FSMContext):
     api_response = None
     registration_number = None
     
-    # Try to send to API first
+    # Try to send to Django backend first
     if API_ENABLED:
         try:
+            # First check if backend is healthy
+            health_check = await check_backend_health()
+            if not health_check.get('success'):
+                logging.warning(f"Backend health check failed: {health_check.get('message')}")
+            
+            # Send the report
             api_response = await send_report_to_api(data)
             if api_response.get('success'):
                 registration_number = api_response.get('data', {}).get('id', 'API_SUCCESS')
-                logging.info(f"Report sent to API successfully: {registration_number}")
+                service = api_response.get('data', {}).get('service', 'Unknown')
+                agency = api_response.get('data', {}).get('agency', 'Unknown')
+                logging.info(f"Report sent to Django backend successfully: {registration_number}")
+                logging.info(f"Report classified as: {service} -> {agency}")
             else:
-                logging.error(f"API submission failed: {api_response.get('message')}")
+                logging.error(f"Django API submission failed: {api_response.get('message')}")
         except Exception as e:
-            logging.error(f"Error sending to API: {e}")
+            logging.error(f"Error sending to Django API: {e}")
     
     # Save report to file as backup
     filename = await save_report_to_file(data)
@@ -328,9 +397,13 @@ async def confirm_report(callback: CallbackQuery, state: FSMContext):
             admin_message = f"🆕 **НОВОЕ ОБРАЩЕНИЕ**\n\n{final_report}"
             if api_response:
                 if api_response.get('success'):
-                    admin_message += f"\n\n✅ **Статус API:** Успешно отправлено"
+                    service = api_response.get('data', {}).get('service', 'Unknown')
+                    agency = api_response.get('data', {}).get('agency', 'Unknown')
+                    admin_message += f"\n\n✅ **Django Backend:** Успешно отправлено и обработано"
+                    admin_message += f"\n🔍 **Классификация:** {service}"
+                    admin_message += f"\n🏛️ **Ведомство:** {agency}"
                 else:
-                    admin_message += f"\n\n❌ **Статус API:** {api_response.get('message', 'Ошибка')}"
+                    admin_message += f"\n\n❌ **Django Backend:** {api_response.get('message', 'Ошибка')}"
             
             await callback.bot.send_message(
                 ADMIN_USER_ID,

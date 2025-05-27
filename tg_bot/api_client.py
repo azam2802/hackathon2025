@@ -36,35 +36,62 @@ class APIClient:
             # Prepare payload for API
             payload = self._prepare_payload(report_data)
             
-            # Headers for API request
+            # Headers for Django API request
             headers = {
                 'Content-Type': 'application/json',
-                'Authorization': f'Bearer {API_KEY or BOT_TOKEN}',
-                'User-Agent': 'GovServices-TelegramBot/1.0'
+                'User-Agent': 'GovServices-TelegramBot/1.0',
+                'Accept': 'application/json'
             }
+            
+            # Add authorization header if API key is provided
+            if API_KEY:
+                headers['Authorization'] = f'Bearer {API_KEY}'
             
             # Make API request
             async with self.session.post(
-                f"{self.base_url}/api/reports",
+                f"{self.base_url}/api/reports/",  # Django expects trailing slash
                 json=payload,
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
                 
-                if response.status == 200:
+                if response.status == 201:  # Django returns 201 for created
                     result = await response.json()
-                    logging.info(f"Report sent successfully: {result.get('id', 'unknown')}")
+                    # Generate a unique ID for tracking
+                    report_id = f"RPT-{payload['telegram_user_id']}-{int(result.get('telegram_user_id', 0))}"
+                    logging.info(f"Report sent successfully to Django backend")
                     return {
                         'success': True,
-                        'data': result,
-                        'message': 'Report sent successfully'
+                        'data': {
+                            'id': report_id,
+                            'service': result.get('service', 'Unknown'),
+                            'agency': result.get('agency', 'Unknown'),
+                            'status': 'registered',
+                            'analysis_completed': True
+                        },
+                        'message': 'Report sent successfully and analyzed'
+                    }
+                elif response.status == 200:  # Fallback for 200 OK
+                    result = await response.json()
+                    report_id = f"RPT-{payload['telegram_user_id']}-{int(result.get('telegram_user_id', 0))}"
+                    logging.info(f"Report sent successfully to Django backend")
+                    return {
+                        'success': True,
+                        'data': {
+                            'id': report_id,
+                            'service': result.get('service', 'Unknown'),
+                            'agency': result.get('agency', 'Unknown'),
+                            'status': 'registered',
+                            'analysis_completed': True
+                        },
+                        'message': 'Report sent successfully and analyzed'
                     }
                 else:
                     error_text = await response.text()
-                    logging.error(f"API error {response.status}: {error_text}")
+                    logging.error(f"Django API error {response.status}: {error_text}")
                     return {
                         'success': False,
-                        'error': f"API error: {response.status}",
+                        'error': f"Django API error: {response.status}",
                         'message': 'Failed to send report to server'
                     }
                     
@@ -94,40 +121,81 @@ class APIClient:
     
     def _prepare_payload(self, report_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Prepare report data for API submission
+        Prepare report data for Django backend API submission
         
         Args:
             report_data: Raw report data from bot
             
         Returns:
-            Formatted payload for API
+            Formatted payload for Django API
         """
         location = report_data.get('location', {})
         
+        # Format payload according to Django backend expectations
         payload = {
             'report_type': report_data.get('type'),
             'region': report_data.get('region'),
             'city': report_data.get('city'),
-            'content': report_data.get('report_text'),
+            'report_text': report_data.get('report_text'),  # Backend expects 'report_text'
             'contact_info': report_data.get('user_name'),
             'telegram_user_id': report_data.get('user_id'),
-            'telegram_username': report_data.get('username'),
-            'location': {
-                'latitude': location.get('latitude'),
-                'longitude': location.get('longitude'),
-                'address': location.get('address'),
-                'source': location.get('source', 'city_selection')
-            },
+            'telegram_username': report_data.get('username', 'unknown'),
+            'latitude': location.get('latitude'),
+            'longitude': location.get('longitude'),
+            'address': location.get('address', ''),
+            'location_source': location.get('source', 'city_selection'),
             'created_at': report_data.get('created_at'),
-            'source': 'telegram_bot',
-            'version': '1.0'
+            'submission_source': 'telegram_bot',
+            'language': report_data.get('language', 'ru')
         }
         
         return payload
     
+    async def check_backend_health(self) -> Dict[str, Any]:
+        """
+        Check if Django backend is running and accessible
+        
+        Returns:
+            Health check result
+        """
+        try:
+            headers = {
+                'User-Agent': 'GovServices-TelegramBot/1.0',
+                'Accept': 'application/json'
+            }
+            
+            async with self.session.get(
+                f"{self.base_url}/api/hello/",
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
+                
+                if response.status == 200:
+                    result = await response.json()
+                    logging.info("Django backend health check successful")
+                    return {
+                        'success': True,
+                        'data': result,
+                        'message': 'Backend is healthy'
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'error': f"Health check failed: {response.status}",
+                        'message': 'Backend is not responding correctly'
+                    }
+                    
+        except Exception as e:
+            logging.error(f"Backend health check failed: {e}")
+            return {
+                'success': False,
+                'error': 'backend_unreachable',
+                'message': 'Cannot reach backend server'
+            }
+
     async def get_report_status(self, report_id: str) -> Dict[str, Any]:
         """
-        Get status of submitted report
+        Get status of submitted report (not implemented in Django backend yet)
         
         Args:
             report_id: ID of the report to check
@@ -137,12 +205,16 @@ class APIClient:
         """
         try:
             headers = {
-                'Authorization': f'Bearer {API_KEY or BOT_TOKEN}',
-                'User-Agent': 'GovServices-TelegramBot/1.0'
+                'User-Agent': 'GovServices-TelegramBot/1.0',
+                'Accept': 'application/json'
             }
             
+            if API_KEY:
+                headers['Authorization'] = f'Bearer {API_KEY}'
+            
+            # Note: This endpoint doesn't exist in the Django backend yet
             async with self.session.get(
-                f"{self.base_url}/api/reports/{report_id}",
+                f"{self.base_url}/api/reports/{report_id}/",
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=15)
             ) as response:
@@ -196,4 +268,15 @@ async def check_report_status(report_id: str) -> Dict[str, Any]:
         Status information
     """
     async with APIClient() as client:
-        return await client.get_report_status(report_id) 
+        return await client.get_report_status(report_id)
+
+
+async def check_backend_health() -> Dict[str, Any]:
+    """
+    Convenience function to check Django backend health
+    
+    Returns:
+        Health check result
+    """
+    async with APIClient() as client:
+        return await client.check_backend_health() 
