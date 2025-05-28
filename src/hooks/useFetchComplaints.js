@@ -22,10 +22,31 @@ const parseDate = (dateString) => {
     } 
     // Проверяем формат даты "dd-MM-YYYY"
     else if (dateString.includes('-')) {
-        const [day, month, year] = dateString.split('-').map(num => parseInt(num, 10));
-        parsedDate = new Date(year, month - 1, day);
+        // Проверяем, не является ли это ISO форматом (YYYY-MM-DD)
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            // Если первая часть - год (4 цифры)
+            if (parts[0].length === 4) {
+                // ISO формат (YYYY-MM-DD)
+                const [year, month, day] = parts.map(num => parseInt(num, 10));
+                parsedDate = new Date(year, month - 1, day);
+            } else {
+                // Наш формат (DD-MM-YYYY)
+                const [day, month, year] = parts.map(num => parseInt(num, 10));
+                parsedDate = new Date(year, month - 1, day);
+            }
+        }
     }
+    // Пробуем стандартный парсинг для ISO и других форматов
     else {
+        parsedDate = new Date(dateString);
+        if (isNaN(parsedDate.getTime())) {
+            return null;
+        }
+    }
+    
+    // Проверяем валидность даты
+    if (!parsedDate || isNaN(parsedDate.getTime())) {
         return null;
     }
     
@@ -40,7 +61,9 @@ export const useFetchComplaints = () => {
         total: 0,
         new: 0,
         inProgress: 0,
-        resolved: 0
+        resolved: 0,
+        overdue: 0,
+        overdueList: []
     });
     
     // Пагинация и фильтрация
@@ -80,6 +103,11 @@ export const useFetchComplaints = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
+        // Получаем дату месяц назад
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        monthAgo.setHours(0, 0, 0, 0);
+        
         // Считаем новые обращения (созданные сегодня)
         const newComplaints = data.filter(item => {
             if (!item.created_at) return false;
@@ -92,14 +120,31 @@ export const useFetchComplaints = () => {
             return createdDate >= today;
         }).length;
         
+        // Считаем обращения в работе
         const inProgress = data.filter(item => item.status === 'pending').length;
+        
+        // Считаем решенные обращения
         const resolved = data.filter(item => item.status === 'resolved').length;
+        
+        // Считаем обращения, которые не обработаны более месяца
+        const overdueComplaints = data.filter(item => {
+            if (!item.created_at || item.status === 'resolved' || item.status === 'cancelled') return false;
+            
+            // Парсим дату создания
+            const createdDate = parseDate(item.created_at);
+            if (!createdDate) return false;
+            
+            // Сравниваем с датой месяц назад
+            return createdDate <= monthAgo;
+        });
         
         setStats({
             total,
             new: newComplaints,
             inProgress,
-            resolved
+            resolved,
+            overdue: overdueComplaints.length,
+            overdueList: overdueComplaints
         });
     };
     

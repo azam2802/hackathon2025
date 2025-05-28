@@ -482,4 +482,64 @@ $box-shadow-hover: 0 5px 25px rgba(58, 54, 224, 0.2);
 
 .float {
   animation: float 5s ease-in-out infinite;
+}
+
+.card {
+  &.overdue-card {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    
+    &:hover {
+      transform: scale(1.02);
+    }
+    
+    .alert-value {
+      color: var(--danger-color);
+      font-weight: bold;
+    }
+    
+    .card-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--danger-color);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+  }
+}
+
+.days-overdue {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.alert-table tr {
+  background-color: rgba(255, 220, 220, 0.1);
+  
+  &:hover {
+    background-color: rgba(255, 220, 220, 0.2);
+  }
+}
+
+.view-all-link {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
 } 

@@ -100,6 +100,17 @@ $transition: all 0.3s ease;
         background-color: rgba(255, 255, 255, 0.2);
       }
     }
+    
+    .overdue-badge {
+      background-color: var(--danger-color);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-right: 20px;
+      animation: pulse 2s infinite;
+    }
   }
   
   .modal-body {
@@ -323,5 +334,33 @@ $transition: all 0.3s ease;
   }
   to {
     transform: translateY(0);
+  }
+}
+
+.overdue-marker {
+  color: var(--danger-color);
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.btn-overdue-action {
+  background-color: #ff5722;
+  border-color: #ff5722;
+  
+  &:hover {
+    background-color: darken(#ff5722, 10%);
+    border-color: darken(#ff5722, 10%);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
   }
 } 
