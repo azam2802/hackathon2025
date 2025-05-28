@@ -114,38 +114,50 @@ def process_report(report_data):
     # Handle photo upload if present
     if 'photo_data' in report_data and report_data['photo_data']:
         try:
+            print("Starting photo upload process...")
             # Decode base64 photo data
             photo_data = report_data['photo_data']
             if isinstance(photo_data, str):
                 try:
                     # Try to decode base64 string
                     photo_bytes = base64.b64decode(photo_data)
-                except:
+                    print("Successfully decoded base64 photo data")
+                except Exception as decode_error:
+                    print(f"Base64 decode error: {str(decode_error)}")
                     # If not base64, use as is
                     photo_bytes = photo_data.encode('utf-8')
+                    print("Using raw string as photo data")
             else:
                 photo_bytes = photo_data
+                print("Using raw bytes as photo data")
 
             # Upload photo data to GCP
             bucket = storage.bucket('public-pulse')
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            blob = bucket.blob(f'reports/{datetime.now().strftime("%Y%m%d")}/{timestamp}.jpg')
+            date_path = datetime.now().strftime("%Y%m%d")
+            blob_path = f'reports/{date_path}/{timestamp}.jpg'
+            print(f"Uploading to blob path: {blob_path}")
+            blob = bucket.blob(blob_path)
             
             # Upload from bytes
             blob.upload_from_string(
                 photo_bytes,
                 content_type='image/jpeg'
             )
+            print("Successfully uploaded photo to GCP")
             
-            # Make the file publicly accessible
-            blob.make_public()
-            
-            # Store the public URL
-            report_data['photo_url'] = blob.public_url
-            print(f"Photo uploaded successfully: {blob.public_url}")
+            # Generate the public URL using the correct format
+            public_url = f"https://storage.googleapis.com/public-pulse/{blob_path}"
+            print(f"Generated public URL: {public_url}")
+            report_data['photo_url'] = public_url
+            del report_data['photo_data']
+            print(f"Photo URL set in report_data: {report_data['photo_url']}")
         except Exception as e:
             print(f"Error uploading photo to GCP: {str(e)}")
+            print(f"Error type: {type(e)}")
             report_data['photo_url'] = None
+            if 'photo_data' in report_data:
+                del report_data['photo_data']
     
     # Analyze the report text
     analysis_result = analyze_report_text(report_data['report_text'])
@@ -156,7 +168,9 @@ def process_report(report_data):
     report_data['importance'] = analysis_result['importance']
     
     # Save to Firebase
+    print(f"Final report_data before saving to Firebase: {report_data}")
     success = save_to_firebase(report_data)
+    print(f"Save to Firebase result: {success}")
     
     return {
         'success': success,
