@@ -2,7 +2,7 @@ FROM node:18-bullseye AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json ./
 
 # Install dependencies
 RUN npm install
