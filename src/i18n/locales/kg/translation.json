@@ -105,7 +105,16 @@
     "noRegionData": "Аймактар боюнча маалымат жок",
     "complaintCount": "Арыздардын саны",
     "days": "күн",
-    "new": "Жаңы"
+    "new": "Жаңы",
+    "layerControls": "Катмарларды башкаруу",
+    "showHeatmap": "Жылуулук картасын көрсөтүү",
+    "showClustering": "Кластерлөөнү көрсөтүү",
+    "statusFilters": "Статус боюнча фильтрлөө",
+    "priorityFilter": "Приоритет боюнча фильтр",
+    "unknownService": "Белгисиз кызмат",
+    "status": "Статус",
+    "description": "Сүрөттөө",
+    "created": "Түзүлгөн"
   },
   "complaints": {
     "analysisTitle": "Жарандардын арыздарын талдоо",
@@ -235,6 +244,8 @@
     "resolved": "Чечилген",
     "rejected": "Четке кагылган",
     "critical": "Критикалык",
+    "cancelled": "Жокко чыгарылган",
+    "new": "Жаңы",
     "high": "Жогорку",
     "medium": "Орточо",
     "low": "Төмөнкү"

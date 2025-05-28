@@ -110,7 +110,16 @@
     "noRegionData": "Нет данных по регионам",
     "complaintCount": "Количество обращений",
     "days": "дней",
-    "new": "Новые"
+    "new": "Новые",
+    "layerControls": "Управление слоями",
+    "showHeatmap": "Показать тепловую карту",
+    "showClustering": "Показать кластеризацию",
+    "statusFilters": "Фильтры по статусу",
+    "priorityFilter": "Фильтр по приоритету",
+    "unknownService": "Неизвестная услуга",
+    "status": "Статус",
+    "description": "Описание",
+    "created": "Создано"
   },
   "complaints": {
     "analysisTitle": "Анализ обращений граждан",
@@ -240,6 +249,8 @@
     "resolved": "Решено",
     "rejected": "Отклонено",
     "critical": "Критический",
+    "cancelled": "Отменено",
+    "new": "Новый",
     "high": "Высокий",
     "medium": "Средний",
     "low": "Низкий"

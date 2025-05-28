@@ -5,7 +5,164 @@ import './Analytics.scss';
 import { useTranslation } from 'react-i18next';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale } from 'chart.js';
 import { Line, Bar, Pie, PolarArea } from 'react-chartjs-2';
-import { Map, Marker, ZoomControl } from 'pigeon-maps';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'react-leaflet-markercluster';
+import 'leaflet.heat';
+
+// Fix Leaflet's default icon issue with Webpack
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
+// Create custom marker icons based on status
+const createMarkerIcon = (status) => {
+  const colors = {
+    resolved: '#4caf50',
+    cancelled: '#f44336',
+    pending: '#ff9800',
+    new: '#2196f3'
+  };
+  
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="
+      background-color: ${colors[status] || colors.new}; 
+      width: 20px; 
+      height: 20px; 
+      border-radius: 50%; 
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    "></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+};
+
+// Custom Heatmap Layer component
+const HeatmapLayer = ({ points }) => {
+  const map = useLeafletMap();
+  
+  useEffect(() => {
+    if (!map || !points.length) return;
+    
+    const heatmapData = points.map(point => [point.lat, point.lng, 1]);
+    const heat = L.heatLayer(heatmapData, {
+      radius: 25,
+      blur: 15,
+      maxZoom: 10,
+      gradient: {
+        0.0: 'blue',
+        0.5: 'lime',
+        0.7: 'yellow',
+        1.0: 'red'
+      }
+    });
+    
+    heat.addTo(map);
+    
+    return () => {
+      map.removeLayer(heat);
+    };
+  }, [map, points]);
+  
+  return null;
+};
+
+// Hook to access map instance
+const useLeafletMap = () => {
+  const map = useMap();
+  return map;
+};
+
+// Map Controls Component  
+const MapControls = ({ mapFilters, setMapFilters, showHeatmap, setShowHeatmap, showClustering, setShowClustering }) => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="map-controls">
+      <div className="map-controls-section">
+        <h4>{t('analytics.layerControls')}</h4>
+        <div className="control-group">
+          <label className="control-item">
+            <input
+              type="checkbox"
+              checked={showHeatmap}
+              onChange={(e) => setShowHeatmap(e.target.checked)}
+            />
+            <span>{t('analytics.showHeatmap')}</span>
+          </label>
+          <label className="control-item">
+            <input
+              type="checkbox"
+              checked={showClustering}
+              onChange={(e) => setShowClustering(e.target.checked)}
+            />
+            <span>{t('analytics.showClustering')}</span>
+          </label>
+        </div>
+      </div>
+
+      <div className="map-controls-section">
+        <h4>{t('analytics.statusFilters')}</h4>
+        <div className="control-group">
+          <label className="control-item status-resolved">
+            <input
+              type="checkbox"
+              checked={mapFilters.showResolved}
+              onChange={(e) => setMapFilters(prev => ({ ...prev, showResolved: e.target.checked }))}
+            />
+            <span>{t('status.resolved')}</span>
+          </label>
+          <label className="control-item status-pending">
+            <input
+              type="checkbox"
+              checked={mapFilters.showPending}
+              onChange={(e) => setMapFilters(prev => ({ ...prev, showPending: e.target.checked }))}
+            />
+            <span>{t('status.pending')}</span>
+          </label>
+          <label className="control-item status-cancelled">
+            <input
+              type="checkbox"
+              checked={mapFilters.showCancelled}
+              onChange={(e) => setMapFilters(prev => ({ ...prev, showCancelled: e.target.checked }))}
+            />
+            <span>{t('status.cancelled')}</span>
+          </label>
+          <label className="control-item status-new">
+            <input
+              type="checkbox"
+              checked={mapFilters.showNew}
+              onChange={(e) => setMapFilters(prev => ({ ...prev, showNew: e.target.checked }))}
+            />
+            <span>{t('status.new')}</span>
+          </label>
+        </div>
+      </div>
+
+      <div className="map-controls-section">
+        <h4>{t('analytics.priorityFilter')}</h4>
+        <select
+          value={mapFilters.priorityFilter}
+          onChange={(e) => setMapFilters(prev => ({ ...prev, priorityFilter: e.target.value }))}
+          className="priority-select"
+        >
+          <option value="all">{t('complaints.all')}</option>
+          <option value="critical">{t('status.critical')}</option>
+          <option value="high">{t('status.high')}</option>
+          <option value="medium">{t('status.medium')}</option>
+          <option value="low">{t('status.low')}</option>
+        </select>
+      </div>
+    </div>
+  );
+};
 
 // Register ChartJS components
 ChartJS.register(
@@ -29,6 +186,20 @@ const Analytics = () => {
   const [selectedAgency, setSelectedAgency] = useState('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState('month');
   const [selectedRegion, setSelectedRegion] = useState('all');
+  
+
+  // Map-specific filters
+  const [mapFilters, setMapFilters] = useState({
+    showResolved: true,
+    showPending: true,
+    showCancelled: true,
+    showNew: true,
+    priorityFilter: 'all'
+  });
+  
+  // Map layer controls
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [showClustering, setShowClustering] = useState(true);
 
   const parseReportDate = (dateString) => {
     if (!dateString) return new Date();
@@ -213,13 +384,36 @@ const Analytics = () => {
           lat: report.latitude,
           lng: report.longitude,
           status: report.status,
-          text: report.report_text
+          text: report.report_text,
+          service: report.service,
+          agency: report.agency,
+          region: report.region,
+          importance: report.importance,
+          created_at: report.created_at
         });
       }
     });
     
     return { markers, regionCounts };
   }, [filteredData]);
+
+  // Filter markers based on map-specific filters
+  const visibleMarkers = useMemo(() => {
+    return geoDistribution.markers.filter(marker => {
+      // Filter by status
+      if (!mapFilters.showResolved && marker.status === 'resolved') return false;
+      if (!mapFilters.showPending && marker.status === 'pending') return false;
+      if (!mapFilters.showCancelled && marker.status === 'cancelled') return false;
+      if (!mapFilters.showNew && marker.status === 'new') return false;
+      
+      // Filter by priority
+      if (mapFilters.priorityFilter !== 'all' && marker.importance !== mapFilters.priorityFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [geoDistribution.markers, mapFilters]);
 
   // Service types distribution
   const serviceDistribution = useMemo(() => {
@@ -414,21 +608,21 @@ const Analytics = () => {
     ]
   };
 
-  // Calculate map center based on markers
+  // Calculate map center based on visible markers
   const mapCenter = useMemo(() => {
-    if (!geoDistribution.markers.length) {
+    if (!visibleMarkers.length) {
       // Default to center of Kyrgyzstan if no markers
       return [41.20438, 74.76609];
     }
     
-    const lats = geoDistribution.markers.map(marker => marker.lat);
-    const lngs = geoDistribution.markers.map(marker => marker.lng);
+    const lats = visibleMarkers.map(marker => marker.lat);
+    const lngs = visibleMarkers.map(marker => marker.lng);
     
     const centerLat = lats.reduce((sum, lat) => sum + lat, 0) / lats.length;
     const centerLng = lngs.reduce((sum, lng) => sum + lng, 0) / lngs.length;
     
     return [centerLat, centerLng];
-  }, [geoDistribution.markers]);
+  }, [visibleMarkers]);
 
   return (
     <div className="analytics-page">
@@ -611,31 +805,193 @@ const Analytics = () => {
           <div className="geo-section">
             <h2>{t('analytics.geographicDistribution')}</h2>
             
+            
             <div className="geo-container">
-              <div className="map-container">
-                {geoDistribution.markers.length > 0 ? (
-                  <Map 
-                    height={400}
-                    center={mapCenter}
-                    defaultZoom={7}
-                  >
-                    <ZoomControl />
-                    {geoDistribution.markers.map(marker => (
-                      <Marker
-                        key={marker.id}
-                        width={30}
-                        anchor={[marker.lat, marker.lng]}
-                        color={
-                          marker.status === 'resolved' ? '#4caf50' :
-                          marker.status === 'cancelled' ? '#f44336' :
-                          '#2196f3'
-                        }
+              <div className="map-section">
+                <div className="map-controls">
+                  <div className="map-controls-section">
+                    <h4>{t('analytics.layerControls')}</h4>
+                    <div className="control-group">
+                      <label className="control-item">
+                        <input
+                          type="checkbox"
+                          checked={showHeatmap}
+                          onChange={(e) => setShowHeatmap(e.target.checked)}
+                        />
+                        <span>{t('analytics.showHeatmap')}</span>
+                      </label>
+                      <label className="control-item">
+                        <input
+                          type="checkbox"
+                          checked={showClustering}
+                          onChange={(e) => setShowClustering(e.target.checked)}
+                        />
+                        <span>{t('analytics.showClustering')}</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="map-controls-section">
+                    <h4>{t('analytics.statusFilters')}</h4>
+                    <div className="control-group">
+                      <label className="control-item status-resolved">
+                        <input
+                          type="checkbox"
+                          checked={mapFilters.showResolved}
+                          onChange={(e) => setMapFilters(prev => ({ ...prev, showResolved: e.target.checked }))}
+                        />
+                        <span>{t('status.resolved')}</span>
+                      </label>
+                      <label className="control-item status-pending">
+                        <input
+                          type="checkbox"
+                          checked={mapFilters.showPending}
+                          onChange={(e) => setMapFilters(prev => ({ ...prev, showPending: e.target.checked }))}
+                        />
+                        <span>{t('status.pending')}</span>
+                      </label>
+                      <label className="control-item status-cancelled">
+                        <input
+                          type="checkbox"
+                          checked={mapFilters.showCancelled}
+                          onChange={(e) => setMapFilters(prev => ({ ...prev, showCancelled: e.target.checked }))}
+                        />
+                        <span>{t('status.cancelled')}</span>
+                      </label>
+                      <label className="control-item status-new">
+                        <input
+                          type="checkbox"
+                          checked={mapFilters.showNew}
+                          onChange={(e) => setMapFilters(prev => ({ ...prev, showNew: e.target.checked }))}
+                        />
+                        <span>{t('status.new')}</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="map-controls-section">
+                    <h4>{t('analytics.priorityFilter')}</h4>
+                    <select
+                      value={mapFilters.priorityFilter}
+                      onChange={(e) => setMapFilters(prev => ({ ...prev, priorityFilter: e.target.value }))}
+                      className="priority-select"
+                    >
+                      <option value="all">{t('complaints.all')}</option>
+                      <option value="critical">{t('status.critical')}</option>
+                      <option value="high">{t('status.high')}</option>
+                      <option value="medium">{t('status.medium')}</option>
+                      <option value="low">{t('status.low')}</option>
+                    </select>
+                  </div>
+                </div>  
+                
+                <div className="map-container">
+                  {visibleMarkers.length > 0 ? (
+                    <MapContainer 
+                      center={mapCenter} 
+                      zoom={7} 
+                      style={{ height: '400px', width: '100%' }}
+                      zoomControl={true}
+                    >
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                       />
-                    ))}
-                  </Map>
-                ) : (
-                  <div className="no-data-message">{t('analytics.noGeoData')}</div>
-                )}
+                      
+                      {/* Heatmap Layer */}
+                      {showHeatmap && <HeatmapLayer points={visibleMarkers} />}
+                      
+                      {/* Markers with optional clustering */}
+                      {showClustering ? (
+                        <MarkerClusterGroup>
+                          {visibleMarkers.map(marker => (
+                            <Marker
+                              key={marker.id}
+                              position={[marker.lat, marker.lng]}
+                              icon={createMarkerIcon(marker.status)}
+                            >
+                              <Popup maxWidth={300}>
+                                <div className="marker-popup">
+                                  <h4>{marker.service || t('analytics.unknownService')}</h4>
+                                  <p><strong>{t('analytics.status')}:</strong> 
+                                    <span className={`status-badge ${marker.status}`}>
+                                      {t(`status.${marker.status}`)}
+                                    </span>
+                                  </p>
+                                  {marker.agency && (
+                                    <p><strong>{t('complaints.agency')}:</strong> {marker.agency}</p>
+                                  )}
+                                  {marker.region && (
+                                    <p><strong>{t('complaints.region')}:</strong> {marker.region}</p>
+                                  )}
+                                  {marker.importance && (
+                                    <p><strong>{t('complaints.importance')}:</strong> 
+                                      <span className={`priority ${marker.importance}`}>
+                                        {t(`status.${marker.importance}`)}
+                                      </span>
+                                    </p>
+                                  )}
+                                  {marker.text && (
+                                    <p><strong>{t('analytics.description')}:</strong> 
+                                      {marker.text.substring(0, 150)}
+                                      {marker.text.length > 150 ? '...' : ''}
+                                    </p>
+                                  )}
+                                  {marker.created_at && (
+                                    <p><strong>{t('analytics.created')}:</strong> {marker.created_at}</p>
+                                  )}
+                                </div>
+                              </Popup>
+                            </Marker>
+                          ))}
+                        </MarkerClusterGroup>
+                      ) : (
+                        visibleMarkers.map(marker => (
+                          <Marker
+                            key={marker.id}
+                            position={[marker.lat, marker.lng]}
+                            icon={createMarkerIcon(marker.status)}
+                          >
+                            <Popup maxWidth={300}>
+                              <div className="marker-popup">
+                                <h4>{marker.service || t('analytics.unknownService')}</h4>
+                                <p><strong>{t('analytics.status')}:</strong> 
+                                  <span className={`status-badge ${marker.status}`}>
+                                    {t(`status.${marker.status}`)}
+                                  </span>
+                                </p>
+                                {marker.agency && (
+                                  <p><strong>{t('complaints.agency')}:</strong> {marker.agency}</p>
+                                )}
+                                {marker.region && (
+                                  <p><strong>{t('complaints.region')}:</strong> {marker.region}</p>
+                                )}
+                                {marker.importance && (
+                                  <p><strong>{t('complaints.importance')}:</strong> 
+                                    <span className={`priority ${marker.importance}`}>
+                                      {t(`status.${marker.importance}`)}
+                                    </span>
+                                  </p>
+                                )}
+                                {marker.text && (
+                                  <p><strong>{t('analytics.description')}:</strong> 
+                                    {marker.text.substring(0, 150)}
+                                    {marker.text.length > 150 ? '...' : ''}
+                                  </p>
+                                )}
+                                {marker.created_at && (
+                                  <p><strong>{t('analytics.created')}:</strong> {marker.created_at}</p>
+                                )}
+                              </div>
+                            </Popup>
+                          </Marker>
+                        ))
+                      )}
+                    </MapContainer>
+                  ) : (
+                    <div className="no-data-message">{t('analytics.noGeoData')}</div>
+                  )}
+                </div>
               </div>
               
               <div className="region-chart">

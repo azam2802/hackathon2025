@@ -282,7 +282,225 @@
   }
 }
 
+// Leaflet map styles
+.map-section {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+  
+  .map-controls {
+    flex: 0 0 250px;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+    
+    .map-controls-section {
+      margin-bottom: 20px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      h4 {
+        margin: 0 0 12px 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+      }
+      
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        
+        .control-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          padding: 4px 0;
+          
+          input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+          }
+          
+          span {
+            color: #555;
+          }
+          
+          &:hover span {
+            color: #333;
+          }
+          
+          // Status-specific colors
+          &.status-resolved span {
+            color: #4caf50;
+          }
+          
+          &.status-pending span {
+            color: #ff9800;
+          }
+          
+          &.status-cancelled span {
+            color: #f44336;
+          }
+          
+          &.status-new span {
+            color: #2196f3;
+          }
+        }
+      }
+      
+      .priority-select {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background-color: white;
+        font-size: 0.85rem;
+        
+        &:focus {
+          outline: none;
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 2px rgba(58, 54, 224, 0.1);
+        }
+      }
+    }
+  }
+  
+  .map-container {
+    flex: 1;
+  }
+}
+
+.map-container {
+  .leaflet-container {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .custom-marker {
+    background: transparent;
+    border: none;
+  }
+  
+  .marker-popup {
+    padding: 8px;
+    
+    h4 {
+      margin: 0 0 8px 0;
+      color: #333;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    p {
+      margin: 4px 0;
+      font-size: 0.85rem;
+      color: #555;
+      
+      strong {
+        color: #333;
+      }
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-left: 4px;
+      
+      &.resolved {
+        background-color: #e8f5e8;
+        color: #4caf50;
+      }
+      
+      &.pending {
+        background-color: #fff3e0;
+        color: #ff9800;
+      }
+      
+      &.cancelled {
+        background-color: #ffebee;
+        color: #f44336;
+      }
+      
+      &.new {
+        background-color: #e3f2fd;
+        color: #2196f3;
+      }
+    }
+    
+    .priority {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-left: 4px;
+      
+      &.critical {
+        background-color: #ffebee;
+        color: #f44336;
+      }
+      
+      &.high {
+        background-color: #fff3e0;
+        color: #ff9800;
+      }
+      
+      &.medium {
+        background-color: #fff8e1;
+        color: #ffc107;
+      }
+      
+      &.low {
+        background-color: #e8f5e8;
+        color: #4caf50;
+      }
+    }
+  }
+  
+  // Marker cluster styles
+  .marker-cluster-small {
+    background-color: rgba(33, 150, 243, 0.7);
+    
+    div {
+      background-color: rgba(33, 150, 243, 0.9);
+      color: white;
+      font-weight: bold;
+    }
+  }
+  
+  .marker-cluster-medium {
+    background-color: rgba(255, 152, 0, 0.7);
+    
+    div {
+      background-color: rgba(255, 152, 0, 0.9);
+      color: white;
+      font-weight: bold;
+    }
+  }
+  
+  .marker-cluster-large {
+    background-color: rgba(244, 67, 54, 0.7);
+    
+    div {
+      background-color: rgba(244, 67, 54, 0.9);
+      color: white;
+      font-weight: bold;
+    }
+  }
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+.marker-cluster-small{background-color:rgba(181, 226, 140, 0.6)}.marker-cluster-small div{background-color:rgba(110, 204, 57, 0.6)}.marker-cluster-medium{background-color:rgba(241, 211, 87, 0.6)}.marker-cluster-medium div{background-color:rgba(240, 194, 12, 0.6)}.marker-cluster-large{background-color:rgba(253, 156, 115, 0.6)}.marker-cluster-large div{background-color:rgba(241, 128, 23, 0.6)}.leaflet-oldie .marker-cluster-small{background-color:rgb(181, 226, 140)}.leaflet-oldie .marker-cluster-small div{background-color:rgb(110, 204, 57)}.leaflet-oldie .marker-cluster-medium{background-color:rgb(241, 211, 87)}.leaflet-oldie .marker-cluster-medium div{background-color:rgb(240, 194, 12)}.leaflet-oldie .marker-cluster-large{background-color:rgb(253, 156, 115)}.leaflet-oldie .marker-cluster-large div{background-color:rgb(241, 128, 23)}.marker-cluster{background-clip:padding-box;border-radius:20px}.marker-cluster div{width:30px;height:30px;margin-left:5px;margin-top:5px;text-align:center;border-radius:15px;font:12px "Helvetica Neue",Arial,Helvetica,sans-serif}.marker-cluster span{line-height:30px}.leaflet-cluster-anim .leaflet-marker-icon,.leaflet-cluster-anim .leaflet-marker-shadow{-webkit-transition:-webkit-transform .3s ease-out,opacity .3s ease-in;-moz-transition:-moz-transform .3s ease-out,opacity .3s ease-in;-o-transition:-o-transform .3s ease-out,opacity .3s ease-in;transition:transform .3s ease-out,opacity .3s ease-in}.leaflet-cluster-spider-leg{-webkit-transition:-webkit-stroke-dashoffset .3s ease-out,-webkit-stroke-opacity .3s ease-in;-moz-transition:-moz-stroke-dashoffset .3s ease-out,-moz-stroke-opacity .3s ease-in;-o-transition:-o-stroke-dashoffset .3s ease-out,-o-stroke-opacity .3s ease-in;transition:stroke-dashoffset .3s ease-out,stroke-opacity .3s ease-in}

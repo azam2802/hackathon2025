@@ -105,7 +105,16 @@
     "noRegionData": "No region data available",
     "complaintCount": "Complaint Count",
     "days": "days",
-    "new": "New"
+    "new": "New",
+    "layerControls": "Layer Controls",
+    "showHeatmap": "Show Heatmap",
+    "showClustering": "Show Clustering",
+    "statusFilters": "Status Filters",
+    "priorityFilter": "Priority Filter",
+    "unknownService": "Unknown Service",
+    "status": "Status",
+    "description": "Description",
+    "created": "Created"
   },
   "complaints": {
     "analysisTitle": "Citizen Complaints Analysis",
@@ -235,6 +244,8 @@
     "resolved": "Resolved",
     "rejected": "Rejected",
     "critical": "Critical",
+    "cancelled": "Cancelled",
+    "new": "New",
     "high": "High",
     "medium": "Medium",
     "low": "Low"
