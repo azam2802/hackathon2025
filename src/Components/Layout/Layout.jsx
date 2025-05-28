@@ -152,7 +152,7 @@ const Layout = () => {
               aria-label="Открыть админ панель"
             >
               <AdminPanelSettings className="sidebar-icon" />
-              <span>Админ панель</span>
+              <span>{t('admin.title')}</span>
             </button>
           )}
           <div className="language-switcher sidebar-language">

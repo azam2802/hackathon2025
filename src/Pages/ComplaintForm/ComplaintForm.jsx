@@ -3,6 +3,7 @@ import './ComplaintForm.scss';
 import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesBackground';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import { useTranslation } from 'react-i18next';
 import { 
   Assignment, 
   LocationOn, 
@@ -14,12 +15,17 @@ import {
   Phone,
   Email
 } from '@mui/icons-material';
+import { 
+  getTranslatedRegions, 
+  getTranslatedCityName 
+} from '../../utils/translationMappings';
 
 const ComplaintForm = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     report_text: '',
     recommendations: '',
-    report_type: 'Жалоба',
+    report_type: t('complaintForm.reportTypeComplaint'),
     region: '',
     city: '',
     address: '',
@@ -73,11 +79,11 @@ const ComplaintForm = () => {
     ]
   };
 
-  const regions = Object.keys(REGIONS_CITIES);
+  const regions = getTranslatedRegions(t);
 
   const reportTypes = [
-    'Жалоба',
-    'Рекомендации',
+    t('complaintForm.reportTypeComplaint'),
+    t('complaintForm.reportTypeRecommendation'),
   ];
 
   const handleInputChange = (e) => {
@@ -94,16 +100,16 @@ const ComplaintForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Имитация отправки формы (здесь будет ваша логика API)
+    // Form submission simulation (your API logic will go here)
     try {
-      // Создаем объект с данными как в telegram боте
+      // Create data object as in telegram bot
       const complaintData = {
         ...formData,
-        // Объединяем контактную информацию для совместимости с telegram форматом
+        // Combine contact information for telegram format compatibility
         contact_info: [formData.full_name, formData.phone, formData.email]
           .filter(Boolean)
           .join(', ') || null,
-        created_at: new Date().toLocaleString('ru-RU', {
+        created_at: new Date().toLocaleString(t('common.locale'), {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
@@ -115,23 +121,23 @@ const ComplaintForm = () => {
         location_source: 'manual_input',
         latitude: null,
         longitude: null,
-        // Устанавливаем значения по умолчанию для отсутствующих полей
-        service: 'Общее обращение',
-        agency: 'Не указано'
+        // Set default values for missing fields
+        service: t('complaintForm.defaultService'),
+        agency: t('complaintForm.defaultAgency')
       };
 
       console.log('Submitting complaint:', complaintData);
       
-      // Имитация API запроса
+      // API request simulation
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setShowSuccess(true);
       
-      // Сброс формы
+      // Reset form
       setFormData({
         report_text: '',
         recommendations: '',
-        report_type: 'Жалоба',
+        report_type: t('complaintForm.reportTypeComplaint'),
         region: '',
         city: '',
         address: '',
@@ -144,7 +150,7 @@ const ComplaintForm = () => {
 
     } catch (error) {
       console.error('Error submitting complaint:', error);
-      alert('Произошла ошибка при отправке обращения. Попробуйте еще раз.');
+      alert(t('complaintForm.errorMessage'));
     } finally {
       setIsSubmitting(false);
     }
@@ -158,20 +164,20 @@ const ComplaintForm = () => {
           <div className="success-icon">
             <CheckCircle style={{ fontSize: '4rem', color: '#10b981' }} />
           </div>
-          <h1>Обращение отправлено!</h1>
-          <p>Ваше обращение успешно зарегистрировано и передано в соответствующие органы.</p>
-          <p>Номер вашего обращения: <strong>#{Math.random().toString(36).substr(2, 9).toUpperCase()}</strong></p>
+          <h1>{t('complaintForm.successTitle')}</h1>
+          <p>{t('complaintForm.successMessage')}</p>
+          <p>{t('complaintForm.successNumber')} <strong>#{Math.random().toString(36).substr(2, 9).toUpperCase()}</strong></p>
           <div className="success-actions">
             <button 
               className="btn btn-primary" 
               onClick={() => setShowSuccess(false)}
             >
               <Assignment style={{ marginRight: '8px', fontSize: '1.2rem' }} />
-              Подать еще одно обращение
+              {t('complaintForm.submitAnother')}
             </button>
             <a href="/" className="btn btn-outline">
               <Home style={{ marginRight: '8px', fontSize: '1.2rem' }} />
-              Вернуться на главную
+              {t('complaintForm.backToHome')}
             </a>
           </div>
         </div>
@@ -187,19 +193,19 @@ const ComplaintForm = () => {
           <img src="/logo-gov.svg" alt="PublicPulse" />
           <span>PublicPulse</span>
         </div>
-        <h1>Подача обращения</h1>
-        <p>Заполните форму ниже, чтобы подать обращение или жалобу</p>
+        <h1>{t('complaintForm.pageTitle')}</h1>
+        <p>{t('complaintForm.pageDescription')}</p>
       </div>
 
       <form className="complaint-form" onSubmit={handleSubmit} data-aos="fade-up">
         <div className="form-section">
           <h3>
             <Assignment style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
-            Тип обращения
+            {t('complaintForm.reportTypeSectionTitle')}
           </h3>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="report_type">Тип обращения *</label>
+              <label htmlFor="report_type">{t('complaintForm.reportTypeLabel')}</label>
               <select
                 id="report_type"
                 name="report_type"
@@ -215,20 +221,20 @@ const ComplaintForm = () => {
           </div>
         </div>
 
-        {formData.report_type !== 'Рекомендации' && (
+        {formData.report_type !== t('complaintForm.reportTypeRecommendation') && (
           <div className="form-section" data-aos="fade-up" data-aos-delay="100">
             <h3>
               <Feedback style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
-              Описание проблемы
+              {t('complaintForm.problemDescriptionTitle')}
             </h3>
             <div className="form-group">
-              <label htmlFor="report_text">Опишите вашу проблему или предложение *</label>
+              <label htmlFor="report_text">{t('complaintForm.problemDescriptionLabel')}</label>
               <textarea
                 id="report_text"
                 name="report_text"
                 value={formData.report_text}
                 onChange={handleInputChange}
-                placeholder="Детально опишите вашу проблему, предложение или жалобу..."
+                placeholder={t('complaintForm.problemDescriptionPlaceholder')}
                 rows="6"
                 required
               />
@@ -239,13 +245,13 @@ const ComplaintForm = () => {
         <div className="form-section" data-aos="fade-up" data-aos-delay="200">
           <h3>
             <Feedback style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
-            {formData.report_type === 'Рекомендации' ? 'Рекомендации' : 'Рекомендации по решению'}
+            {formData.report_type === t('complaintForm.reportTypeRecommendation') ? t('complaintForm.recommendationsTitle') : t('complaintForm.recommendationsSolutionTitle')}
           </h3>
           <div className="form-group">
             <label htmlFor="recommendations">
-              {formData.report_type === 'Рекомендации' 
-                ? 'Опишите ваши рекомендации *' 
-                : 'Предложите решение проблемы (необязательно)'
+              {formData.report_type === t('complaintForm.reportTypeRecommendation')
+                ? t('complaintForm.recommendationsLabel') 
+                : t('complaintForm.recommendationsSolutionLabel')
               }
             </label>
             <textarea
@@ -254,12 +260,12 @@ const ComplaintForm = () => {
               value={formData.recommendations}
               onChange={handleInputChange}
               placeholder={
-                formData.report_type === 'Рекомендации'
-                  ? "Детально опишите ваши рекомендации..."
-                  : "Если у вас есть идеи о том, как можно решить эту проблему, опишите их здесь..."
+                formData.report_type === t('complaintForm.reportTypeRecommendation')
+                  ? t('complaintForm.recommendationsPlaceholder')
+                  : t('complaintForm.recommendationsSolutionPlaceholder')
               }
-              rows={formData.report_type === 'Рекомендации' ? "6" : "4"}
-              required={formData.report_type === 'Рекомендации'}
+              rows={formData.report_type === t('complaintForm.reportTypeRecommendation') ? "6" : "4"}
+              required={formData.report_type === t('complaintForm.reportTypeRecommendation')}
             />
           </div>
         </div>
@@ -267,11 +273,11 @@ const ComplaintForm = () => {
         <div className="form-section" data-aos="fade-up" data-aos-delay="300">
           <h3>
             <LocationOn style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
-            Местоположение
+            {t('complaintForm.locationTitle')}
           </h3>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="region">Регион *</label>
+              <label htmlFor="region">{t('complaintForm.regionLabel')}</label>
               <select
                 id="region"
                 name="region"
@@ -279,14 +285,14 @@ const ComplaintForm = () => {
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Выберите регион</option>
+                <option value="">{t('complaintForm.selectRegion')}</option>
                 {regions.map(region => (
-                  <option key={region} value={region}>{region}</option>
+                  <option key={region.value} value={region.value}>{region.label}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label htmlFor="city">Город/населенный пункт *</label>
+              <label htmlFor="city">{t('complaintForm.cityLabel')}</label>
               <select
                 id="city"
                 name="city"
@@ -296,23 +302,23 @@ const ComplaintForm = () => {
                 disabled={!formData.region}
               >
                 <option value="">
-                  {formData.region ? "Выберите город" : "Сначала выберите регион"}
+                  {formData.region ? t('complaintForm.selectCity') : t('complaintForm.selectRegionFirst')}
                 </option>
                 {formData.region && REGIONS_CITIES[formData.region]?.map(city => (
-                  <option key={city} value={city}>{city}</option>
+                  <option key={city} value={city}>{getTranslatedCityName(city, t)}</option>
                 ))}
               </select>
             </div>
           </div>
           <div className="form-group">
-            <label htmlFor="address">Адрес (необязательно)</label>
+            <label htmlFor="address">{t('complaintForm.addressLabel')}</label>
             <input
               type="text"
               id="address"
               name="address"
               value={formData.address}
               onChange={handleInputChange}
-              placeholder="Укажите конкретный адрес, если необходимо"
+              placeholder={t('complaintForm.addressPlaceholder')}
             />
           </div>
         </div>
@@ -320,12 +326,12 @@ const ComplaintForm = () => {
         <div className="form-section" data-aos="fade-up" data-aos-delay="400">
           <h3>
             <ContactMail style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
-            Контактная информация
+            {t('complaintForm.contactInfoTitle')}
           </h3>
           <div className="form-group">
             <label htmlFor="email">
               <Email style={{ marginRight: '4px', fontSize: '1rem', verticalAlign: 'middle' }} />
-              Email *
+              {t('complaintForm.emailLabel')}
             </label>
             <input
               type="email"
@@ -333,14 +339,14 @@ const ComplaintForm = () => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="example@email.com"
+              placeholder={t('complaintForm.emailPlaceholder')}
               required
             />
           </div>
           <div className="form-group">
             <label htmlFor="full_name">
               <Person style={{ marginRight: '4px', fontSize: '1rem', verticalAlign: 'middle' }} />
-              ФИО (необязательно)
+              {t('complaintForm.fullNameLabel')}
             </label>
             <input
               type="text"
@@ -348,13 +354,13 @@ const ComplaintForm = () => {
               name="full_name"
               value={formData.full_name}
               onChange={handleInputChange}
-              placeholder="Укажите ваше полное имя"
+              placeholder={t('complaintForm.fullNamePlaceholder')}
             />
           </div>
           <div className="form-group">
             <label htmlFor="phone">
               <Phone style={{ marginRight: '4px', fontSize: '1rem', verticalAlign: 'middle' }} />
-              Телефон (необязательно)
+              {t('complaintForm.phoneLabel')}
             </label>
             <input
               type="tel"
@@ -362,11 +368,11 @@ const ComplaintForm = () => {
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              placeholder="+996 XXX XXX XXX"
+              placeholder={t('complaintForm.phonePlaceholder')}
             />
           </div>
           <small className="form-hint">
-            Email обязателен для получения уведомлений о статусе вашего обращения
+            {t('complaintForm.emailHint')}
           </small>
         </div>
 
@@ -376,11 +382,11 @@ const ComplaintForm = () => {
             className="btn btn-primary btn-large"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Отправка...' : 'Отправить обращение'}
+            {isSubmitting ? t('complaintForm.submitting') : t('complaintForm.submitButton')}
           </button>
           <a href="/" className="btn btn-outline">
             <Home style={{ marginRight: '8px', fontSize: '1.2rem' }} />
-            Отмена
+            {t('complaintForm.cancelButton')}
           </a>
         </div>
       </form>
