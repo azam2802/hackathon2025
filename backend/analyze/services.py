@@ -80,13 +80,13 @@ def analyze_report_text(report_text):
             return result
         except json.JSONDecodeError as e:
             print(f"JSON parsing error: {str(e)}")
-            return {"service": "Unknown", "agency": "Unknown", "importance": "low"}
+            return {"service": "Spam", "agency": "Spam", "importance": "low"}
     except ValueError as e:
         print(f"OpenAI client error: {str(e)}")
-        return {"service": "Unknown", "agency": "Unknown", "importance": "low"}
+        return {"service": "Spam", "agency": "Spam", "importance": "low"}
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        return {"service": "Unknown", "agency": "Unknown", "importance": "low"}
+        return {"service": "Spam", "agency": "Spam", "importance": "low"}
 
 def save_to_firebase(report_data):
     """Save the report data to Firebase Firestore."""
