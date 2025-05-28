@@ -88,7 +88,6 @@ const Register = () => {
             <img src="/logo-gov.svg" alt="Public Pulse" />
             <span>Public Pulse</span>
           </div>
-          <h1>Регистрация в системе</h1>
           <p>Создайте аккаунт для доступа к системе</p>
         </div>
         
@@ -105,6 +104,7 @@ const Register = () => {
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleChange}
+                  placeholder="Введите ваше полное имя"
                   required
                 />
               </div>
@@ -117,6 +117,7 @@ const Register = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  placeholder="example@email.com"
                   required
                 />
               </div>
@@ -129,6 +130,7 @@ const Register = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  placeholder="••••••••"
                   required
                   minLength="6"
                 />
@@ -142,6 +144,7 @@ const Register = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  placeholder="••••••••"
                   required
                 />
               </div>

@@ -46,26 +46,13 @@ const Login = () => {
             <img src="/logo-gov.svg" alt={t('app.title')} />
             <span>Public Pulse</span>
           </div>
-          <h1>{t('auth.login')}</h1>
           <p>{t('auth.loginDescription')}</p>
-          <Link to="/" className="landing-link">
-            {t('auth.learnMore')}
-          </Link>
-          <div className="language-switcher auth-header-language">
-            <LanguageSwitcher />
-          </div>
         </div>
         
         <div className="auth-content">
           <div className="auth-form">
             <h2>{t('auth.login')}</h2>
             
-            <div className="superadmin-info">
-              <p><strong>{t('auth.superadminCredentials')}:</strong></p>
-              <p>Email: superadmin@gov.kg</p>
-              <p>Password: SuperAdmin123!</p>
-            </div>
-
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label htmlFor="email">{t('auth.email')}</label>
@@ -75,6 +62,7 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  placeholder="example@email.com"
                   required
                 />
               </div>
@@ -87,6 +75,7 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  placeholder="••••••••"
                   required
                 />
               </div>
@@ -105,6 +94,9 @@ const Login = () => {
               </Link>
             </p>
           </div>
+        </div>
+        <div className="auth-header-language">
+          <LanguageSwitcher />
         </div>
       </div>
       <ParticlesBackground className="fixed-particles" />
