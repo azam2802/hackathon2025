@@ -8,7 +8,9 @@ export const useFetchAnalytics = (forceRefresh = false) => {
         error, 
         fetchAnalytics, 
         selectedRegion, 
-        setSelectedRegion 
+        selectedPeriod,
+        setSelectedRegion,
+        setSelectedPeriod
     } = useAnalyticsStore();
     
     useEffect(() => {
@@ -21,7 +23,9 @@ export const useFetchAnalytics = (forceRefresh = false) => {
         loading, 
         error, 
         selectedRegion, 
+        selectedPeriod,
         setSelectedRegion,
+        setSelectedPeriod,
         refreshData: () => fetchAnalytics(true) 
     };
 };

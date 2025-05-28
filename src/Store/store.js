@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { collection, getCountFromServer, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import agencyData from '../Assets/agency.json';
 
@@ -86,12 +86,14 @@ export const useAnalyticsStore = create((set, get) => ({
     problemServicesList: [],
     agencyDistribution: {},      // Распределение обращений по ведомствам
     serviceTypeDistribution: {}, // Распределение по типам услуг
-    monthlyReports: {}           // Данные по месяцам для графика динамики
+    monthlyReports: {},           // Данные по месяцам для графика динамики
+    regionAnalytics: {}          // Аналитика по регионам
   },
   loading: false,
   error: null,
   lastFetched: null,
   selectedRegion: 'all', // Default value for region filter
+  selectedPeriod: 'all', // Default value for period filter (all, 7d, 30d, 90d, 1y)
   
   // Method to check if we need to refresh data
   shouldRefreshData: () => {
@@ -111,11 +113,48 @@ export const useAnalyticsStore = create((set, get) => ({
     // Force refresh analytics when region changes
     get().fetchAnalytics(true);
   },
+
+  // Set selected period
+  setSelectedPeriod: (period) => {
+    set({ selectedPeriod: period });
+    // Force refresh analytics when period changes
+    get().fetchAnalytics(true);
+  },
+
+  // Helper function to filter reports by period
+  filterReportsByPeriod: (reports, period) => {
+    if (!period || period === 'all') return reports;
+    
+    const now = new Date();
+    let startDate;
+    
+    switch (period) {
+      case '7d':
+        startDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        break;
+      case '30d':
+        startDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        break;
+      case '90d':
+        startDate = new Date(now.getTime() - (90 * 24 * 60 * 60 * 1000));
+        break;
+      case '1y':
+        startDate = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+        break;
+      default:
+        return reports;
+    }
+    
+    return reports.filter(report => {
+      const reportDate = parseDate(report.created_at);
+      return reportDate && reportDate >= startDate;
+    });
+  },
   
   // Action to fetch analytics
   fetchAnalytics: async (forceRefresh = false) => {
     const store = get();
-    const { selectedRegion } = store;
+    const { selectedRegion, selectedPeriod } = store;
     
     // Skip fetching if data was recently fetched, unless forceRefresh is true
     if (!forceRefresh && !store.shouldRefreshData()) {
@@ -127,36 +166,7 @@ export const useAnalyticsStore = create((set, get) => ({
     
     set({ loading: true });
     try {
-      // Get reports count
-      const reportsCollection = collection(db, 'reports');
-      let reportsCountQuery = reportsCollection;
-      
-      // Apply region filter if selected
-      if (selectedRegion && selectedRegion !== 'all') {
-        reportsCountQuery = query(reportsCountQuery, where('region', '==', selectedRegion));
-      }
-      
-      const reportsSnapshot = await getCountFromServer(reportsCountQuery);
-      const reportsCount = reportsSnapshot.data().count;
-      
-      // Get resolved reports count
-      let resolvedReportsQuery = query(
-        collection(db, 'reports'), 
-        where('status', '==', 'resolved')
-      );
-      
-      // Apply region filter if selected for resolved reports too
-      if (selectedRegion && selectedRegion !== 'all') {
-        resolvedReportsQuery = query(
-          resolvedReportsQuery, 
-          where('region', '==', selectedRegion)
-        );
-      }
-      
-      const resolvedSnapshot = await getCountFromServer(resolvedReportsQuery);
-      const resolvedCount = resolvedSnapshot.data().count;
-      
-      // Get all reports to calculate problem services and resolution time
+      // Get all reports with region filter only (we'll apply period filter locally)
       let reportsQuery = collection(db, 'reports');
       
       // Apply region filter if a specific region is selected
@@ -166,7 +176,21 @@ export const useAnalyticsStore = create((set, get) => ({
       
       const allReportsSnapshot = await getDocs(reportsQuery);
       
-      // Calculate average resolution time
+      // Collect all reports for processing
+      const allReports = [];
+      allReportsSnapshot.forEach(doc => {
+        const data = doc.data();
+        allReports.push(data);
+      });
+      
+      // Apply period filter to all reports to get final filtered dataset
+      const filteredReports = store.filterReportsByPeriod(allReports, selectedPeriod);
+      
+      // Calculate counts from filtered reports for consistency
+      const reportsCount = filteredReports.length;
+      const resolvedCount = filteredReports.filter(report => report.status === 'resolved').length;
+      
+      // Initialize variables for calculations
       let totalResolutionDays = 0;
       let resolvedReportsWithDates = 0;
       
@@ -174,12 +198,7 @@ export const useAnalyticsStore = create((set, get) => ({
       const serviceCountMap = {};
       const agencyCountMap = {};
       
-      // Collect all reports for processing
-      const allReports = [];
-      
-      allReportsSnapshot.forEach(doc => {
-        const data = doc.data();
-        allReports.push(data);
+      filteredReports.forEach(data => {
         
         // Count by service
         const service = data.service;
@@ -214,7 +233,7 @@ export const useAnalyticsStore = create((set, get) => ({
         : 0;
       
       // Group reports by month for trend chart
-      const monthlyReports = groupByMonth(allReports);
+      const monthlyReports = groupByMonth(filteredReports);
       
       // Find problem services (more than 30 reports)
       const problemServicesList = Object.entries(serviceCountMap)
@@ -251,6 +270,63 @@ export const useAnalyticsStore = create((set, get) => ({
           return acc;
         }, {});
       
+      // --- REGION ANALYTICS ---
+      // Group reports by region
+      const regionAnalytics = {};
+      allReports.forEach(data => {
+        const region = data.region || 'Неизвестно';
+        if (!regionAnalytics[region]) {
+          regionAnalytics[region] = {
+            reportsCount: 0,
+            resolvedCount: 0,
+            avgResolutionTime: 0,
+            overdueCount: 0,
+            problemServices: 0,
+            problemServicesList: [],
+          };
+        }
+        regionAnalytics[region].reportsCount++;
+        if (data.status === 'resolved') {
+          regionAnalytics[region].resolvedCount++;
+          if (data.created_at && data.resolved_at) {
+            const createdDate = parseDate(data.created_at);
+            const resolvedDate = parseDate(data.resolved_at);
+            if (createdDate && resolvedDate) {
+              const daysDifference = getDaysDifference(createdDate, resolvedDate);
+              if (daysDifference !== null && daysDifference >= 0) {
+                regionAnalytics[region].avgResolutionTime += daysDifference;
+              }
+            }
+          }
+        }
+        // Overdue: status is not resolved and deadline passed
+        if (data.status !== 'resolved' && data.deadline) {
+          const deadlineDate = parseDate(data.deadline);
+          if (deadlineDate && deadlineDate < new Date()) {
+            regionAnalytics[region].overdueCount++;
+          }
+        }
+      });
+      // Finalize avgResolutionTime and problemServices for each region
+      Object.keys(regionAnalytics).forEach(region => {
+        const reg = regionAnalytics[region];
+        reg.avgResolutionTime = reg.resolvedCount > 0 ? +(reg.avgResolutionTime / reg.resolvedCount).toFixed(1) : 0;
+        // Problem services for region
+        const serviceCountMap = {};
+        allReports.filter(r => (r.region || 'Неизвестно') === region).forEach(r => {
+          if (r.service) serviceCountMap[r.service] = (serviceCountMap[r.service] || 0) + 1;
+        });
+        reg.problemServicesList = Object.entries(serviceCountMap)
+          .filter(([, count]) => count > 30)
+          .map(([service, count]) => {
+            const serviceInfo = agencyData.find(item => item.service === service);
+            const agency = serviceInfo ? serviceInfo.agency : 'Неизвестно';
+            return { service, count, agency };
+          })
+          .sort((a, b) => b.count - a.count);
+        reg.problemServices = reg.problemServicesList.length;
+      });
+      
       set({ 
         analytics: {
           reportsCount,
@@ -260,7 +336,8 @@ export const useAnalyticsStore = create((set, get) => ({
           problemServicesList,
           agencyDistribution,
           serviceTypeDistribution,
-          monthlyReports
+          monthlyReports,
+          regionAnalytics // <-- add this
         },
         loading: false,
         error: null,
@@ -282,7 +359,8 @@ export const useAnalyticsStore = create((set, get) => ({
       problemServicesList: [],
       agencyDistribution: {},
       serviceTypeDistribution: {},
-      monthlyReports: {}
+      monthlyReports: {},
+      regionAnalytics: {}
     },
     loading: false,
     error: null,

@@ -1,15 +1,29 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import './Dashboard.scss'
 import { useFetchAnalytics } from '../../Hooks/useFetchAnalytics';
 import { useFetchComplaints } from '../../Hooks/useFetchComplaints';
+import { useReportGenerator } from '../../Hooks/useReportGenerator';
 import AgencyChart from '../../Components/Charts/AgencyChart';
 import ServiceTypeChart from '../../Components/Charts/ServiceTypeChart';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAnalyticsStore } from '../../Store/store';
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Chart refs for capturing in report
+  const agencyChartRef = useRef(null);
+  const serviceTypeChartRef = useRef(null);
+  
+  const { 
+    selectedRegion: filterRegion, 
+    selectedPeriod, 
+    setSelectedRegion: setFilterRegion, 
+    setSelectedPeriod 
+  } = useAnalyticsStore();
+  
   const { 
     reportsCount, 
     resolvedCount, 
@@ -20,8 +34,19 @@ const Dashboard = () => {
     monthlyReports,
     loading: analyticsLoading, 
     error: analyticsError, 
-    refreshData: refreshAnalytics 
+    refreshData: refreshAnalytics,
+    selectedRegion
   } = useFetchAnalytics();
+  
+  // Handle region filter change
+  const handleRegionChange = (e) => {
+    setFilterRegion(e.target.value);
+  };
+  
+  // Handle period filter change
+  const handlePeriodChange = (e) => {
+    setSelectedPeriod(e.target.value);
+  };
   
   // Функция для парсинга даты из разных форматов
   const parseDate = (dateString) => {
@@ -86,12 +111,38 @@ const Dashboard = () => {
     refreshData: refreshComplaints
   } = useFetchComplaints();
   
+  // Get report generator function
+  const { generateDashboardReport } = useReportGenerator();
+  
   const loading = analyticsLoading || complaintsLoading;
   const error = analyticsError || complaintsError;
   
   const refreshData = () => {
     refreshAnalytics();
     refreshComplaints();
+  };
+  
+  // Handler for report generation
+  const handleGenerateReport = async () => {
+    if (loading) return;
+    
+    try {
+      await generateDashboardReport({
+        reportsCount,
+        resolvedCount,
+        avgResolutionTime,
+        problemServices,
+        problemServicesList,
+        selectedRegion,
+        chartRefs: {
+          agencyChartRef,
+          serviceTypeChartRef
+        }
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      // You could show an error notification here
+    }
   };
   
   const navigateToComplaints = (filter) => {
@@ -104,8 +155,13 @@ const Dashboard = () => {
       <div className="page-title" data-aos="fade-down">
         <h1>{t('dashboard.title')}</h1>
         <div className="actions">
-          <button className="btn btn-primary">{t('dashboard.generateReport')}</button>
-          <button className="btn btn-outline">{t('dashboard.exportData')}</button>
+          <button 
+            className="btn btn-primary"
+            onClick={handleGenerateReport}
+            disabled={loading}
+          >
+            {t('dashboard.generateReport')}
+          </button>
           <button 
             className="btn btn-refresh" 
             onClick={refreshData} 
@@ -124,8 +180,8 @@ const Dashboard = () => {
         
         <div className="filter-controls">
           <div className="filter-dropdown">
-            <select defaultValue="">
-              <option value="" disabled>{t('dashboard.period')}</option>
+            <select value={selectedPeriod} onChange={handlePeriodChange}>
+              <option value="all">{t('dashboard.period')}</option>
               <option value="7d">{t('dashboard.last7Days')}</option>
               <option value="30d">{t('dashboard.last30Days')}</option>
               <option value="90d">{t('dashboard.last90Days')}</option>
@@ -134,13 +190,17 @@ const Dashboard = () => {
           </div>
           
           <div className="filter-dropdown">
-            <select defaultValue="">
-              <option value="" disabled>{t('dashboard.region')}</option>
+            <select value={filterRegion} onChange={handleRegionChange}>
               <option value="all">{t('dashboard.allRegions')}</option>
-              <option value="msk">{t('dashboard.moscow')}</option>
-              <option value="spb">{t('dashboard.saintPetersburg')}</option>
-              <option value="nsk">{t('dashboard.novosibirsk')}</option>
-              <option value="ekb">{t('dashboard.ekaterinburg')}</option>
+              <option value="Бишкек">{t('dashboard.bishkek')}</option>
+              <option value="Ош">{t('dashboard.osh')}</option>
+              <option value="Ошская область">{t('dashboard.oshOblast')}</option>
+              <option value="Таласская область">{t('dashboard.talasOblast')}</option>
+              <option value="Чуйская область">{t('dashboard.chuyOblast')}</option>
+              <option value="Баткенская область">{t('dashboard.batkenOblast')}</option>
+              <option value="Иссык-Кульская область">{t('dashboard.issykKulOblast')}</option>
+              <option value="Джалал-Абадская область">{t('dashboard.jalalAbadOblast')}</option>
+              <option value="Нарынская область">{t('dashboard.narynOblast')}</option>
             </select>
           </div>
         </div>
@@ -251,14 +311,14 @@ const Dashboard = () => {
       )}
       
       <div className="charts-container">
-        <div className="chart-card" data-aos="fade-right" data-aos-delay="300">
+        <div className="chart-card" data-aos="fade-right" data-aos-delay="300" ref={agencyChartRef}>
           <div className="chart-title">
             <span>{t('dashboard.complaintsByAgency')}</span>
           </div>
           <AgencyChart monthlyReports={monthlyReports} loading={loading} />
         </div>
         
-        <div className="chart-card" data-aos="fade-left" data-aos-delay="400">
+        <div className="chart-card" data-aos="fade-left" data-aos-delay="400" ref={serviceTypeChartRef}>
           <div className="chart-title">
             <span>{t('dashboard.serviceTypeDistribution')}</span>
           </div>
