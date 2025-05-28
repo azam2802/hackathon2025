@@ -7,23 +7,27 @@ import agencyData from '../Assets/agency.json';
 const parseDate = (dateString) => {
   if (!dateString) return null;
   
-  // Проверяем формат dd-MM-YYYY
-  if (dateString.includes('-')) {
-    const [day, month, year] = dateString.split('-').map(num => parseInt(num, 10));
-    return new Date(year, month - 1, day);
-  }
-  
-  // Проверяем формат dd.MM.YYYY HH:mm
-  if (dateString.includes('.')) {
-    const [datePart, timePart] = dateString.split(' ');
-    const [day, month, year] = datePart.split('.').map(num => parseInt(num, 10));
-    
-    if (timePart) {
-      const [hours, minutes] = timePart.split(':').map(num => parseInt(num, 10));
-      return new Date(year, month - 1, day, hours, minutes);
+  try {
+    // Проверяем формат dd-MM-YYYY
+    if (dateString.includes('-')) {
+      const [day, month, year] = dateString.split('-').map(num => parseInt(num, 10));
+      return new Date(year, month - 1, day);
     }
     
-    return new Date(year, month - 1, day);
+    // Проверяем формат dd.MM.YYYY HH:mm
+    if (dateString.includes('.')) {
+      const [datePart, timePart] = dateString.split(' ');
+      const [day, month, year] = datePart.split('.').map(num => parseInt(num, 10));
+      
+      if (timePart) {
+        const [hours, minutes] = timePart.split(':').map(num => parseInt(num, 10));
+        return new Date(year, month - 1, day, hours, minutes);
+      }
+      
+      return new Date(year, month - 1, day);
+    }
+  } catch (error) {
+    console.error(`Error parsing date: ${dateString}`, error);
   }
   
   return null;
@@ -81,7 +85,7 @@ export const useAnalyticsStore = create((set, get) => ({
   analytics: {
     reportsCount: 0,
     resolvedCount: 0,
-    avgResolutionTime: 0,
+    avgResolutionTime: null,
     problemServices: 0,
     problemServicesList: [],
     agencyDistribution: {},      // Распределение обращений по ведомствам
@@ -200,18 +204,25 @@ export const useAnalyticsStore = create((set, get) => ({
           
           if (createdDate && resolvedDate) {
             const daysDifference = getDaysDifference(createdDate, resolvedDate);
+            console.log(`Report ${data.id || 'unknown'}: created ${data.created_at}, resolved ${data.resolved_at}, days: ${daysDifference}`);
             if (daysDifference !== null && daysDifference >= 0) {
               totalResolutionDays += daysDifference;
               resolvedReportsWithDates++;
+            } else if (daysDifference !== null) {
+              console.warn(`Negative resolution time: ${daysDifference} days for report created on ${data.created_at} and resolved on ${data.resolved_at}`);
             }
+          } else {
+            console.warn(`Could not parse dates: ${data.created_at} or ${data.resolved_at}`);
           }
         }
       });
       
       // Calculate average resolution time
+      console.log(`Total resolution days: ${totalResolutionDays}, Reports with dates: ${resolvedReportsWithDates}`);
       const avgResolutionTime = resolvedReportsWithDates > 0 
         ? +(totalResolutionDays / resolvedReportsWithDates).toFixed(1) 
-        : 0;
+        : null; // Use null instead of 0 to differentiate between no data and 0 days
+      console.log(`Calculated average resolution time: ${avgResolutionTime} days`)
       
       // Group reports by month for trend chart
       const monthlyReports = groupByMonth(allReports);
@@ -277,7 +288,7 @@ export const useAnalyticsStore = create((set, get) => ({
     analytics: {
       reportsCount: 0,
       resolvedCount: 0,
-      avgResolutionTime: 0,
+      avgResolutionTime: null,
       problemServices: 0,
       problemServicesList: [],
       agencyDistribution: {},

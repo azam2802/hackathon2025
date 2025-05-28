@@ -94,23 +94,23 @@ const Layout = () => {
           <span>ГосАналитика</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin" end className={({ isActive }) => isActive ? 'active' : ''}>
             <IconDashboard className="sidebar-icon" />
             <span>Дашборд</span>
           </NavLink>
-          <NavLink to="/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
             <Assignment className="sidebar-icon" />
             <span>Обращения</span>
           </NavLink>
-          <NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/services" className={({ isActive }) => isActive ? 'active' : ''}>
             <Search className="sidebar-icon" />
             <span>Услуги</span>
           </NavLink>
-          <NavLink to="/reports" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/reports" className={({ isActive }) => isActive ? 'active' : ''}>
             <BarChart className="sidebar-icon" />
             <span>Отчеты</span>
           </NavLink>
-          <NavLink to="/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
             <Analytics className="sidebar-icon" />
             <span>Аналитика</span>
           </NavLink>

@@ -26,7 +26,7 @@ const Login = () => {
 
     try {
       await signInUser(formData.email, formData.password);
-      navigate('/'); // Redirect to dashboard on successful login
+      navigate('/admin'); // Redirect to admin dashboard on successful login
     } catch (error) {
       setError(error.message);
     } finally {

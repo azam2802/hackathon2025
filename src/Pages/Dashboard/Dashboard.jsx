@@ -45,7 +45,7 @@ const Dashboard = () => {
       <div className="page-title" data-aos="fade-down">
         <h1>Дашборд анализа обращений граждан</h1>
         <div className="actions">
-          <button className="btn btn-primary">Сформировать отчет</button>
+          <a href="/complaint-form" className="btn btn-primary">Подать обращение</a>
           <button className="btn btn-outline">Экспорт данных</button>
           <button 
             className="btn btn-refresh" 
@@ -114,9 +114,10 @@ const Dashboard = () => {
         <div className="card" data-aos="zoom-in" data-aos-delay="400">
           <div className="card-title">Среднее время решения</div>
           <div className="card-value">
-            {loading ? 'Загрузка...' : avgResolutionTime === 0 
-              ? 'Нет данных' 
-              : formatDays(avgResolutionTime)
+            {loading ? 'Загрузка...' : 
+              (avgResolutionTime === null || avgResolutionTime === 0 || !avgResolutionTime) 
+                ? 'Нет данных' 
+                : formatDays(avgResolutionTime)
             }
           </div>
         </div>

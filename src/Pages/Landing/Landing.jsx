@@ -27,7 +27,7 @@ const Landing = () => {
           <p className="hero-subtitle">
 Платформа для выявления неэффективных госуслуг через анализ жалоб и обращений.          </p>
           <div className="hero-actions">
-            <a href="/complaints" className="btn btn-primary">Оставить жалобу</a>
+            <a href="/complaint-form" className="btn btn-primary">Оставить жалобу</a>
             <a href="#about" className="btn btn-outline">Узнать больше</a>
           </div>
         </div>
