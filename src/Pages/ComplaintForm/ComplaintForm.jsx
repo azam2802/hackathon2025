@@ -4,6 +4,7 @@ import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesB
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { useTranslation } from 'react-i18next';
+import { useComplaintApi } from '../../hooks/useComplaintApi';
 import { 
   Assignment, 
   LocationOn, 
@@ -22,6 +23,7 @@ import {
 
 const ComplaintForm = () => {
   const { t } = useTranslation();
+  const { submitComplaint, isLoading, error } = useComplaintApi();
   const [formData, setFormData] = useState({
     report_text: '',
     recommendations: '',
@@ -100,37 +102,9 @@ const ComplaintForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Form submission simulation (your API logic will go here)
     try {
-      // Create data object as in telegram bot
-      const complaintData = {
-        ...formData,
-        // Combine contact information for telegram format compatibility
-        contact_info: [formData.full_name, formData.phone, formData.email]
-          .filter(Boolean)
-          .join(', ') || null,
-        created_at: new Date().toLocaleString(t('common.locale'), {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        status: 'pending',
-        submission_source: 'website',
-        location_source: 'manual_input',
-        latitude: null,
-        longitude: null,
-        // Set default values for missing fields
-        service: t('complaintForm.defaultService'),
-        agency: t('complaintForm.defaultAgency')
-      };
-
-      console.log('Submitting complaint:', complaintData);
-      
-      // API request simulation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const result = await submitComplaint(formData);
+      console.log('Жалоба успешно отправлена:', result);
       setShowSuccess(true);
       
       // Reset form
@@ -149,7 +123,7 @@ const ComplaintForm = () => {
       });
 
     } catch (error) {
-      console.error('Error submitting complaint:', error);
+      console.error('Ошибка при отправке жалобы:', error);
       alert(t('complaintForm.errorMessage'));
     } finally {
       setIsSubmitting(false);

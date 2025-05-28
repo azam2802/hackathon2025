@@ -22,8 +22,7 @@ def initialize_firebase():
         cred = credentials.Certificate(service_account_path)
         firebase_admin.initialize_app(cred)
         print("Firebase Admin SDK initialized successfully!")
-        return True
     except Exception as e:
         print(f"Warning: Error initializing Firebase Admin SDK: {str(e)}")
         print("Firebase features will be disabled.")
-        return None
+        raise
