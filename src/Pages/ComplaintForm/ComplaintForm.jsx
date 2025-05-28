@@ -38,13 +38,15 @@ const ComplaintForm = () => {
     email: '',
     importance: 'medium',
     language: 'ru',
-    photo_data: null
+    photo_data: null,
+    id: null
   });
 
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [reportId, setReportId] = useState(null);
 
   // Initialize AOS animations
   useEffect(() => {
@@ -107,12 +109,21 @@ const ComplaintForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Generate a unique ID before submitting
+    const generatedId = Math.random().toString(36).substr(2, 9).toLowerCase();
+    setReportId(generatedId);
+
+    const dataToSubmit = {
+      ...formData,
+      id: generatedId
+    };
+
     try {
-      const result = await submitComplaint(formData);
+      const result = await submitComplaint(dataToSubmit);
       console.log('Жалоба успешно отправлена:', result);
       setShowSuccess(true);
       
-      // Reset form
+      // Reset form, but keep the generated ID for display
       setFormData({
         report_text: '',
         recommendations: '',
@@ -125,12 +136,14 @@ const ComplaintForm = () => {
         email: '',
         importance: 'medium',
         language: 'ru',
-        photo_data: null
+        photo_data: null,
+        id: null
       });
 
     } catch (error) {
       console.error('Ошибка при отправке жалобы:', error);
       alert(t('complaintForm.errorMessage'));
+      setReportId(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -185,7 +198,7 @@ const ComplaintForm = () => {
           </div>
           <h1>{t('complaintForm.successTitle')}</h1>
           <p>{t('complaintForm.successMessage')}</p>
-          <p>{t('complaintForm.successNumber')} <strong>#{Math.random().toString(36).substr(2, 9).toUpperCase()}</strong></p>
+          <p>{t('complaintForm.successNumber')} <strong>#{reportId}</strong></p>
           <div className="success-actions">
             <button 
               className="btn btn-primary" 

@@ -114,10 +114,10 @@ def save_to_firebase(report_data):
         # Get Firestore client
         db = firestore.client()
 
-        # Generate a document ID if 'rpt' is not present
+        # Use the provided ID if available, otherwise generate a unique one
         document_id = (
-            report_data.get("rpt")
-            or f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            report_data.get("id")
+            or f"report_{datetime.now().strftime('%Y%m%d_%H%m%S')}"
         )
 
         # Add the report to the 'reports' collection with the specified document ID
