@@ -1,4 +1,7 @@
 {
+  "common": {
+    "locale": "ky-KG"
+  },
   "app": {
     "title": "Арыздарды башкаруу системасы",
     "welcome": "Арыздарды башкаруу системасына кош келиңиз"
@@ -170,6 +173,50 @@
     "saving": "Сакталууда...",
     "updateError": "Арызды жаңыртууда ката"
   },
+  "complaintForm": {
+    "pageTitle": "Арыз берүү",
+    "pageDescription": "Арыз же даттануу берүү үчүн төмөнкү форманы толтуруңуз",
+    "reportTypeSectionTitle": "Кайрылуунун түрү",
+    "reportTypeLabel": "Кайрылуунун түрү *",
+    "reportTypeComplaint": "Арыз",
+    "reportTypeRecommendation": "Сунуштар",
+    "problemDescriptionTitle": "Көйгөйдү сүрөттөө",
+    "problemDescriptionLabel": "Көйгөйүңүздү же сунушуңузду сүрөттөңүз *",
+    "problemDescriptionPlaceholder": "Көйгөйүңүздү, сунушуңузду же даттануунузду деталдуу сүрөттөңүз...",
+    "recommendationsTitle": "Сунуштар",
+    "recommendationsSolutionTitle": "Чечүү боюнча сунуштар",
+    "recommendationsLabel": "Сиздин сунуштарыңызды сүрөттөңүз *",
+    "recommendationsSolutionLabel": "Көйгөйдү чечүү боюнча сунуш бериңиз (милдеттүү эмес)",
+    "recommendationsPlaceholder": "Сиздин сунуштарыңызды деталдуу сүрөттөңүз...",
+    "recommendationsSolutionPlaceholder": "Эгер бул көйгөйдү кандайча чечүү боюнча идеяларыңыз бар болсо, аларды бул жерде сүрөттөңүз...",
+    "locationTitle": "Жайгашкан жери",
+    "regionLabel": "Аймак *",
+    "selectRegion": "Аймакты тандаңыз",
+    "cityLabel": "Шаар/калк конуштук жери *",
+    "selectCity": "Шаарды тандаңыз",
+    "selectRegionFirst": "Алгач аймакты тандаңыз",
+    "addressLabel": "Дареги (милдеттүү эмес)",
+    "addressPlaceholder": "Керек болсо так дарегин көрсөтүңүз",
+    "contactInfoTitle": "Байланыш маалыматтары",
+    "emailLabel": "Email *",
+    "emailPlaceholder": "example@email.com",
+    "fullNameLabel": "Аты-жөнү (милдеттүү эмес)",
+    "fullNamePlaceholder": "Толук атыңызды көрсөтүңүз",
+    "phoneLabel": "Телефон (милдеттүү эмес)",
+    "phonePlaceholder": "+996 XXX XXX XXX",
+    "emailHint": "Арыздын статусу жөнүндө билдирүү алуу үчүн Email милдеттүү",
+    "submitButton": "Арыз жөнөтүү",
+    "submitting": "Жөнөтүлүүдө...",
+    "cancelButton": "Жокко чыгаруу",
+    "successTitle": "Арыз жөнөтүлдү!",
+    "successMessage": "Сиздин арызыңыз ийгиликтүү каттоодон өттү жана тиешелүү органдарга жөнөтүлдү.",
+    "successNumber": "Сиздин арызыңыздын номери:",
+    "submitAnother": "Дагы бир арыз берүү",
+    "backToHome": "Башкы бетке кайтуу",
+    "errorMessage": "Арыз жөнөтүүдө ката кетти. Кайрадан аракет кылыңыз.",
+    "defaultService": "Жалпы кайрылуу",
+    "defaultAgency": "Көрсөтүлгөн эмес"
+  },
   "landing": {
     "menuAbout": "Кызмат жөнүндө",
     "menuFeatures": "Артыкчылыктар",
@@ -288,5 +335,16 @@
     "architecture": "Архитектура министрлиги",
     "nationalSecurity": "Улуттук коопсуздук боюнча мамлекеттик комитети",
     "socialFund": "Кыргыз Республикасынын Социалдык фонду"
+  },
+  "regions": {
+    "bishkek": "Бишкек",
+    "osh": "Ош",
+    "chuyOblast": "Чүй облусу",
+    "oshOblast": "Ош облусу",
+    "jalabadOblast": "Жалал-Абад облусу",
+    "batkenOblast": "Баткен облусу",
+    "narynOblast": "Нарын облусу",
+    "issykkulOblast": "Ысык-Көл облусу",
+    "talasOblast": "Талас облусу"
   }
 } 
