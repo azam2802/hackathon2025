@@ -7,6 +7,7 @@ import AgencyChart from '../../Components/Charts/AgencyChart';
 import ServiceTypeChart from '../../Components/Charts/ServiceTypeChart';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAnalyticsStore } from '../../Store/store';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -15,6 +16,13 @@ const Dashboard = () => {
   // Chart refs for capturing in report
   const agencyChartRef = useRef(null);
   const serviceTypeChartRef = useRef(null);
+  
+  const { 
+    selectedRegion: filterRegion, 
+    selectedPeriod, 
+    setSelectedRegion: setFilterRegion, 
+    setSelectedPeriod 
+  } = useAnalyticsStore();
   
   const { 
     reportsCount, 
@@ -29,6 +37,16 @@ const Dashboard = () => {
     refreshData: refreshAnalytics,
     selectedRegion
   } = useFetchAnalytics();
+  
+  // Handle region filter change
+  const handleRegionChange = (e) => {
+    setFilterRegion(e.target.value);
+  };
+  
+  // Handle period filter change
+  const handlePeriodChange = (e) => {
+    setSelectedPeriod(e.target.value);
+  };
   
   // Функция для парсинга даты из разных форматов
   const parseDate = (dateString) => {
@@ -162,8 +180,8 @@ const Dashboard = () => {
         
         <div className="filter-controls">
           <div className="filter-dropdown">
-            <select defaultValue="">
-              <option value="" disabled>{t('dashboard.period')}</option>
+            <select value={selectedPeriod} onChange={handlePeriodChange}>
+              <option value="all">{t('dashboard.period')}</option>
               <option value="7d">{t('dashboard.last7Days')}</option>
               <option value="30d">{t('dashboard.last30Days')}</option>
               <option value="90d">{t('dashboard.last90Days')}</option>
@@ -172,13 +190,17 @@ const Dashboard = () => {
           </div>
           
           <div className="filter-dropdown">
-            <select defaultValue="">
-              <option value="" disabled>{t('dashboard.region')}</option>
+            <select value={filterRegion} onChange={handleRegionChange}>
               <option value="all">{t('dashboard.allRegions')}</option>
-              <option value="msk">{t('dashboard.moscow')}</option>
-              <option value="spb">{t('dashboard.saintPetersburg')}</option>
-              <option value="nsk">{t('dashboard.novosibirsk')}</option>
-              <option value="ekb">{t('dashboard.ekaterinburg')}</option>
+              <option value="Бишкек">{t('dashboard.bishkek')}</option>
+              <option value="Ош">{t('dashboard.osh')}</option>
+              <option value="Ошская область">{t('dashboard.oshOblast')}</option>
+              <option value="Таласская область">{t('dashboard.talasOblast')}</option>
+              <option value="Чуйская область">{t('dashboard.chuyOblast')}</option>
+              <option value="Баткенская область">{t('dashboard.batkenOblast')}</option>
+              <option value="Иссык-Кульская область">{t('dashboard.issykKulOblast')}</option>
+              <option value="Джалал-Абадская область">{t('dashboard.jalalAbadOblast')}</option>
+              <option value="Нарынская область">{t('dashboard.narynOblast')}</option>
             </select>
           </div>
         </div>
