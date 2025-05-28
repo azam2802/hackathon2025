@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import './Dashboard.scss'
 import { useFetchAnalytics } from '../../Hooks/useFetchAnalytics';
 import { useFetchComplaints } from '../../Hooks/useFetchComplaints';
+import { useReportGenerator } from '../../Hooks/useReportGenerator';
 import AgencyChart from '../../Components/Charts/AgencyChart';
 import ServiceTypeChart from '../../Components/Charts/ServiceTypeChart';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,11 @@ import { useTranslation } from 'react-i18next';
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Chart refs for capturing in report
+  const agencyChartRef = useRef(null);
+  const serviceTypeChartRef = useRef(null);
+  
   const { 
     reportsCount, 
     resolvedCount, 
@@ -20,7 +26,8 @@ const Dashboard = () => {
     monthlyReports,
     loading: analyticsLoading, 
     error: analyticsError, 
-    refreshData: refreshAnalytics 
+    refreshData: refreshAnalytics,
+    selectedRegion
   } = useFetchAnalytics();
   
   // Функция для парсинга даты из разных форматов
@@ -86,12 +93,70 @@ const Dashboard = () => {
     refreshData: refreshComplaints
   } = useFetchComplaints();
   
+  // Get report generator functions
+  const { 
+    generateDashboardReport,
+    exportComplaintsToCsv,
+    exportComplaintsToExcel
+  } = useReportGenerator();
+  
   const loading = analyticsLoading || complaintsLoading;
   const error = analyticsError || complaintsError;
   
   const refreshData = () => {
     refreshAnalytics();
     refreshComplaints();
+  };
+  
+  // Handler for report generation
+  const handleGenerateReport = async () => {
+    if (loading) return;
+    
+    try {
+      await generateDashboardReport({
+        reportsCount,
+        resolvedCount,
+        avgResolutionTime,
+        problemServices,
+        problemServicesList,
+        selectedRegion,
+        chartRefs: {
+          agencyChartRef,
+          serviceTypeChartRef
+        }
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      // You could show an error notification here
+    }
+  };
+  
+  // Handler for exporting data to CSV
+  const handleExportToCsv = () => {
+    if (loading) return;
+    
+    try {
+      exportComplaintsToCsv({
+        complaints: stats.overdueList || [],
+        stats
+      });
+    } catch (error) {
+      console.error('Error exporting to CSV:', error);
+    }
+  };
+  
+  // Handler for exporting data to Excel
+  const handleExportToExcel = () => {
+    if (loading) return;
+    
+    try {
+      exportComplaintsToExcel({
+        complaints: stats.overdueList || [],
+        stats
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+    }
   };
   
   const navigateToComplaints = (filter) => {
@@ -104,8 +169,37 @@ const Dashboard = () => {
       <div className="page-title" data-aos="fade-down">
         <h1>{t('dashboard.title')}</h1>
         <div className="actions">
-          <button className="btn btn-primary">{t('dashboard.generateReport')}</button>
-          <button className="btn btn-outline">{t('dashboard.exportData')}</button>
+          <button 
+            className="btn btn-primary"
+            onClick={handleGenerateReport}
+            disabled={loading}
+          >
+            {t('dashboard.generateReport')}
+          </button>
+          <div className="dropdown">
+            <button 
+              className="btn btn-outline dropdown-toggle"
+              disabled={loading}
+            >
+              {t('dashboard.exportData')}
+            </button>
+            <div className="dropdown-menu">
+              <button 
+                className="dropdown-item"
+                onClick={handleExportToCsv}
+                disabled={loading}
+              >
+                CSV
+              </button>
+              <button 
+                className="dropdown-item"
+                onClick={handleExportToExcel}
+                disabled={loading}
+              >
+                Excel
+              </button>
+            </div>
+          </div>
           <button 
             className="btn btn-refresh" 
             onClick={refreshData} 
@@ -251,14 +345,14 @@ const Dashboard = () => {
       )}
       
       <div className="charts-container">
-        <div className="chart-card" data-aos="fade-right" data-aos-delay="300">
+        <div className="chart-card" data-aos="fade-right" data-aos-delay="300" ref={agencyChartRef}>
           <div className="chart-title">
             <span>{t('dashboard.complaintsByAgency')}</span>
           </div>
           <AgencyChart monthlyReports={monthlyReports} loading={loading} />
         </div>
         
-        <div className="chart-card" data-aos="fade-left" data-aos-delay="400">
+        <div className="chart-card" data-aos="fade-left" data-aos-delay="400" ref={serviceTypeChartRef}>
           <div className="chart-title">
             <span>{t('dashboard.serviceTypeDistribution')}</span>
           </div>
