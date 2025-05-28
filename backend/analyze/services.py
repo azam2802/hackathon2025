@@ -1,8 +1,12 @@
 import json
 import os
+import base64
 from openai import OpenAI
-from firebase_admin import firestore
+from firebase_admin import firestore, storage
 from dotenv import load_dotenv
+import requests
+from io import BytesIO
+from datetime import datetime
 
 
 load_dotenv()
@@ -107,6 +111,42 @@ def save_to_firebase(report_data):
 
 def process_report(report_data):
     """Process a report: analyze it and save to Firebase."""
+    # Handle photo upload if present
+    if 'photo_data' in report_data and report_data['photo_data']:
+        try:
+            # Decode base64 photo data
+            photo_data = report_data['photo_data']
+            if isinstance(photo_data, str):
+                try:
+                    # Try to decode base64 string
+                    photo_bytes = base64.b64decode(photo_data)
+                except:
+                    # If not base64, use as is
+                    photo_bytes = photo_data.encode('utf-8')
+            else:
+                photo_bytes = photo_data
+
+            # Upload photo data to GCP
+            bucket = storage.bucket('public-pulse')
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            blob = bucket.blob(f'reports/{datetime.now().strftime("%Y%m%d")}/{timestamp}.jpg')
+            
+            # Upload from bytes
+            blob.upload_from_string(
+                photo_bytes,
+                content_type='image/jpeg'
+            )
+            
+            # Make the file publicly accessible
+            blob.make_public()
+            
+            # Store the public URL
+            report_data['photo_url'] = blob.public_url
+            print(f"Photo uploaded successfully: {blob.public_url}")
+        except Exception as e:
+            print(f"Error uploading photo to GCP: {str(e)}")
+            report_data['photo_url'] = None
+    
     # Analyze the report text
     analysis_result = analyze_report_text(report_data['report_text'])
     

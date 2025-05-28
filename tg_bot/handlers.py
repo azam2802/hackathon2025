@@ -397,9 +397,10 @@ async def process_city(callback: CallbackQuery, state: FSMContext):
 
 @router.message(ReportStates.waiting_for_report_text)
 async def process_report_text(message: Message, state: FSMContext):
-    """Process report text input"""
+    """Process report text and move to photo step for complaints"""
     data = await state.get_data()
     lang = get_user_language(data)
+    report_type = data.get("type")
 
     if len(message.text) < 10:
         await message.answer(get_text("text_too_short", lang))
@@ -407,8 +408,67 @@ async def process_report_text(message: Message, state: FSMContext):
 
     await state.update_data(report_text=message.text)
 
-    await message.answer(get_text("enter_contact_info", lang))
+    # For complaints, ask for photo
+    if report_type == "Жалоба":
+        await message.answer(
+            get_text("enter_photo", lang),
+            reply_markup=get_skip_location_inline_keyboard(lang)  # Using the same skip button style
+        )
+        await state.set_state(ReportStates.waiting_for_photo)
+    else:
+        # For recommendations, go straight to contact info
+        await message.answer(get_text("enter_contact_info", lang))
+        await state.set_state(ReportStates.waiting_for_user_name)
 
+
+@router.message(ReportStates.waiting_for_photo, F.photo)
+async def process_photo(message: Message, state: FSMContext):
+    """Process photo and move to solution step"""
+    data = await state.get_data()
+    lang = get_user_language(data)
+
+    # Save the largest photo
+    photo = message.photo[-1]
+    
+    # Download the photo
+    file = await message.bot.get_file(photo.file_id)
+    photo_data = await message.bot.download_file(file.file_path)
+    
+    # Store photo data
+    await state.update_data(photo_data=photo_data.read())
+
+    await message.answer(
+        get_text("enter_solution", lang),
+        reply_markup=get_skip_location_inline_keyboard(lang)  # Using the same skip button style
+    )
+    await state.set_state(ReportStates.waiting_for_solution)
+
+
+@router.callback_query(F.data == "skip_location_selection", ReportStates.waiting_for_photo)
+async def skip_photo(callback: CallbackQuery, state: FSMContext):
+    """Handle photo skip"""
+    await callback.answer()
+    
+    data = await state.get_data()
+    lang = get_user_language(data)
+
+    await callback.message.delete()
+    await callback.message.answer(get_text("photo_skipped", lang))
+    await callback.message.answer(
+        get_text("enter_solution", lang),
+        reply_markup=get_skip_location_inline_keyboard(lang)  # Using the same skip button style
+    )
+    await state.set_state(ReportStates.waiting_for_solution)
+
+
+@router.message(ReportStates.waiting_for_solution)
+async def process_solution(message: Message, state: FSMContext):
+    """Process solution and move to contact info"""
+    data = await state.get_data()
+    lang = get_user_language(data)
+
+    await state.update_data(solution=message.text)
+    await message.answer(get_text("enter_contact_info", lang))
     await state.set_state(ReportStates.waiting_for_user_name)
 
 
@@ -725,6 +785,20 @@ async def skip_address_inline(callback: CallbackQuery, state: FSMContext):
     )
 
     await state.set_state(ReportStates.waiting_for_report_text)
+
+
+@router.callback_query(F.data == "skip_location_selection", ReportStates.waiting_for_solution)
+async def skip_solution(callback: CallbackQuery, state: FSMContext):
+    """Handle solution skip"""
+    await callback.answer()
+    
+    data = await state.get_data()
+    lang = get_user_language(data)
+
+    await callback.message.delete()
+    await callback.message.answer(get_text("solution_skipped", lang))
+    await callback.message.answer(get_text("enter_contact_info", lang))
+    await state.set_state(ReportStates.waiting_for_user_name)
 
 
 # Handle any other messages during states
