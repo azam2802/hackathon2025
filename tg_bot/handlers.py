@@ -412,9 +412,7 @@ async def process_report_text(message: Message, state: FSMContext):
     if report_type == "Жалоба":
         await message.answer(
             get_text("enter_photo", lang),
-            reply_markup=get_skip_location_inline_keyboard(
-                lang
-            ),  # Using the same skip button style
+            reply_markup=get_skip_location_inline_keyboard(lang)  # Using the same skip button style
         )
         await state.set_state(ReportStates.waiting_for_photo)
     else:
@@ -431,30 +429,26 @@ async def process_photo(message: Message, state: FSMContext):
 
     # Save the largest photo
     photo = message.photo[-1]
-
+    
     # Download the photo
     file = await message.bot.get_file(photo.file_id)
     photo_data = await message.bot.download_file(file.file_path)
-
+    
     # Store photo data
     await state.update_data(photo_data=photo_data.read())
 
     await message.answer(
         get_text("enter_solution", lang),
-        reply_markup=get_skip_location_inline_keyboard(
-            lang
-        ),  # Using the same skip button style
+        reply_markup=get_skip_location_inline_keyboard(lang)  # Using the same skip button style
     )
     await state.set_state(ReportStates.waiting_for_solution)
 
 
-@router.callback_query(
-    F.data == "skip_location_selection", ReportStates.waiting_for_photo
-)
+@router.callback_query(F.data == "skip_location_selection", ReportStates.waiting_for_photo)
 async def skip_photo(callback: CallbackQuery, state: FSMContext):
     """Handle photo skip"""
     await callback.answer()
-
+    
     data = await state.get_data()
     lang = get_user_language(data)
 
@@ -462,9 +456,7 @@ async def skip_photo(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(get_text("photo_skipped", lang))
     await callback.message.answer(
         get_text("enter_solution", lang),
-        reply_markup=get_skip_location_inline_keyboard(
-            lang
-        ),  # Using the same skip button style
+        reply_markup=get_skip_location_inline_keyboard(lang)  # Using the same skip button style
     )
     await state.set_state(ReportStates.waiting_for_solution)
 
@@ -795,13 +787,11 @@ async def skip_address_inline(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ReportStates.waiting_for_report_text)
 
 
-@router.callback_query(
-    F.data == "skip_location_selection", ReportStates.waiting_for_solution
-)
+@router.callback_query(F.data == "skip_location_selection", ReportStates.waiting_for_solution)
 async def skip_solution(callback: CallbackQuery, state: FSMContext):
     """Handle solution skip"""
     await callback.answer()
-
+    
     data = await state.get_data()
     lang = get_user_language(data)
 
