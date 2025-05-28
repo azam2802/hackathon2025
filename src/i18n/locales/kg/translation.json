@@ -171,7 +171,10 @@
     "currentPriority": "Учурдагы приоритет",
     "saveChanges": "Өзгөртүүлөрдү сактоо",
     "saving": "Сакталууда...",
-    "updateError": "Арызды жаңыртууда ката"
+    "updateError": "Арызды жаңыртууда ката",
+    "photo": "Сүрөт",
+    "complaintPhoto": "Арыз сүрөтү",
+    "solution": "Чечим"
   },
   "complaintForm": {
     "pageTitle": "Арыз берүү",
