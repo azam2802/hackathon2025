@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale } from 'chart.js';
 import { Line, Bar, Pie, PolarArea } from 'react-chartjs-2';
 import { Map, Marker, ZoomControl } from 'pigeon-maps';
+import { FaExpand, FaCompress } from 'react-icons/fa';
 
 // Register ChartJS components
 ChartJS.register(
@@ -31,6 +32,7 @@ const Analytics = () => {
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   const parseReportDate = (dateString) => {
     if (!dateString) return new Date();
@@ -730,11 +732,17 @@ const Analytics = () => {
             <h2>{t('analytics.geographicDistribution')}</h2>
             
             <div className="geo-container">
-              <div className="map-container">
+              <div className={`map-container ${isMapExpanded ? 'expanded' : ''}`}>
                 {geoDistribution.markers.length > 0 ? (
                   <>
+                    <button 
+                      className="expand-map-button"
+                      onClick={() => setIsMapExpanded(!isMapExpanded)}
+                    >
+                      {isMapExpanded ? <FaCompress /> : <FaExpand />}
+                    </button>
                     <Map 
-                      height={400}
+                      height={isMapExpanded ? 800 : 400}
                       center={mapCenter}
                       defaultZoom={7}
                     >
