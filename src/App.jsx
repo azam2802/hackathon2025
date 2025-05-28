@@ -4,6 +4,7 @@ import Home from './Pages/Home/Home'
 import Layout from './Components/Layout/Layout'
 import Dashboard from './Pages/Dashboard/Dashboard'
 import Complaints from './Pages/Complaints/Complaints'
+import Analytics from './Pages/Analytics/Analytics'
 import { AuthProvider } from './contexts/AuthContext'
 import Login from './Pages/Auth/Login'
 import Register from './Pages/Auth/Register'
@@ -14,7 +15,6 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/landing" element={<Landing />} />
         <Route path="/login" element={
           <div className="auth-only-layout">
             <ParticlesBackground />
@@ -27,13 +27,13 @@ function App() {
             <Register />
           </div>
         } />
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/admin" element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="complaints" element={<Complaints />} />
           <Route path="services" element={<Home />} />
           <Route path="reports" element={<Home />} />
-          <Route path="analytics" element={<Home />} />
+          <Route path="analytics" element={<Analytics />} />
         </Route>
       </Routes>
     </AuthProvider>

@@ -96,7 +96,7 @@ const Dashboard = () => {
   
   const navigateToComplaints = (filter) => {
     // Перенаправляем на страницу Complaints с нужным фильтром
-    navigate('/complaints', { state: { filter } });
+    navigate('/admin/complaints', { state: { filter } });
   };
 
   return (
@@ -227,7 +227,7 @@ const Dashboard = () => {
                     <td className="days-overdue">{formatDays(daysPassed)}</td>
                     <td>{complaint.service}</td>
                     <td>
-                      <button className="btn btn-sm btn-warning" onClick={() => navigate(`/complaints?id=${complaint.id}`)}>
+                      <button className="btn btn-sm btn-warning" onClick={() => navigate(`ints?id=${complaint.id}`)}>
                         {t('dashboard.process')}
                       </button>
                     </td>

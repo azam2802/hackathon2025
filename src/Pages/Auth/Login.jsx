@@ -29,7 +29,7 @@ const Login = () => {
 
     try {
       await signInUser(formData.email, formData.password);
-      navigate('/'); // Redirect to dashboard on successful login
+      navigate('/admin/dashboard'); // Redirect to dashboard on successful login
     } catch (error) {
       setError(error.message);
     } finally {
@@ -47,7 +47,7 @@ const Login = () => {
           </div>
           <h1>{t('auth.login')}</h1>
           <p>{t('auth.loginDescription')}</p>
-          <Link to="/landing" className="landing-link">
+          <Link to="/" className="landing-link">
             {t('auth.learnMore')}
           </Link>
           <div className="language-switcher auth-header-language">

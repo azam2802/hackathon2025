@@ -95,23 +95,15 @@ const Layout = () => {
           <span>Public Pulse</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/dashboard" end className={({ isActive }) => isActive ? 'active' : ''}>
             <Speed className="sidebar-icon" />
             <span>{t('navigation.dashboard')}</span>
           </NavLink>
-          <NavLink to="/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
             <Assignment className="sidebar-icon" />
             <span>{t('navigation.complaints')}</span>
           </NavLink>
-          <NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>
-            <Search className="sidebar-icon" />
-            <span>{t('navigation.services')}</span>
-          </NavLink>
-          <NavLink to="/reports" className={({ isActive }) => isActive ? 'active' : ''}>
-            <BarChart className="sidebar-icon" />
-            <span>{t('navigation.reports')}</span>
-          </NavLink>
-          <NavLink to="/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
             <Analytics className="sidebar-icon" />
             <span>{t('navigation.analytics')}</span>
           </NavLink>
