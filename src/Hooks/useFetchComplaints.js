@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, where, orderBy, limit, startAfter, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { useAnalyticsStore } from '../Store/store';
 
 // Функция для парсинга даты из разных форматов
 const parseDate = (dateString) => {
@@ -54,6 +55,9 @@ const parseDate = (dateString) => {
 };
 
 export const useFetchComplaints = () => {
+    // Get selected region from analytics store
+    const { selectedRegion } = useAnalyticsStore();
+    
     const [complaints, setComplaints] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -83,16 +87,16 @@ export const useFetchComplaints = () => {
     const [cachedTimestamp, setCachedTimestamp] = useState({});
     
     // Функция для проверки актуальности кэша
-    const isCacheValid = (cacheKey) => {
+    const isCacheValid = useCallback((cacheKey) => {
         if (!cachedTimestamp[cacheKey]) return false;
         
         const fiveMinutes = 5 * 60 * 1000; // 5 минут в миллисекундах
         return (Date.now() - cachedTimestamp[cacheKey]) < fiveMinutes;
-    };
+    }, [cachedTimestamp]);
     
-    // Создание ключа для кэша на основе фильтров и страницы
-    const getCacheKey = (filters, page) => {
-        return `${filters.status || 'all'}_${filters.agency || 'all'}_${filters.importance || 'all'}_${filters.searchTerm || 'none'}_page${page}`;
+    // Создание ключа для кэша на основе фильтров, региона и страницы
+    const getCacheKey = (filters, page, region) => {
+        return `${filters.status || 'all'}_${filters.agency || 'all'}_${filters.importance || 'all'}_${filters.searchTerm || 'none'}_${region || 'all'}_page${page}`;
     };
     
     // Функция для подсчета статистики
@@ -155,7 +159,7 @@ export const useFetchComplaints = () => {
             const targetPage = resetPagination ? 1 : currentPage;
             
             // Проверяем кэш, если не нужно принудительно обновлять
-            const cacheKey = getCacheKey(filters, targetPage);
+            const cacheKey = getCacheKey(filters, targetPage, selectedRegion);
             if (!skipCache && isCacheValid(cacheKey) && cachedComplaints[cacheKey]) {
                 // Используем кэшированные данные
                 if (resetPagination) {
@@ -184,6 +188,11 @@ export const useFetchComplaints = () => {
             // Строим запрос с учетом фильтров
             let complaintsQuery = collection(db, 'reports');
             let queryConstraints = [];
+            
+            // Добавляем фильтр региона, если выбран конкретный регион
+            if (selectedRegion && selectedRegion !== 'all') {
+                queryConstraints.push(where('region', '==', selectedRegion));
+            }
             
             // Добавляем фильтры, если они заданы
             if (filters.status) {
@@ -346,7 +355,14 @@ export const useFetchComplaints = () => {
             // Обновляем статистику (отдельный запрос для полной статистики)
             // Делаем только при полной перезагрузке для оптимизации
             if (resetPagination) {
-                const statsQuery = collection(db, 'reports');
+                // Build stats query with region filter if selected
+                let statsQuery = collection(db, 'reports');
+                
+                // Apply region filter if a specific region is selected
+                if (selectedRegion && selectedRegion !== 'all') {
+                    statsQuery = query(statsQuery, where('region', '==', selectedRegion));
+                }
+                
                 const statsSnapshot = await getDocs(statsQuery);
                 const allComplaints = [];
                 
@@ -367,7 +383,7 @@ export const useFetchComplaints = () => {
         } finally {
             setLoading(false);
         }
-    }, [filters, lastVisible, currentPage, cachedComplaints, cachedTimestamp]);
+    }, [filters, lastVisible, currentPage, cachedComplaints, selectedRegion, isCacheValid]);
     
     // Обработчик изменения фильтров
     const handleFilterChange = (newFilters) => {
@@ -399,7 +415,12 @@ export const useFetchComplaints = () => {
     // Загружаем данные при монтировании или изменении фильтров
     useEffect(() => {
         fetchComplaints(true);
-    }, [filters]);
+    }, [fetchComplaints, filters]);
+    
+    // Загружаем данные при изменении региона
+    useEffect(() => {
+        fetchComplaints(true);
+    }, [fetchComplaints, selectedRegion]);
     
     // Загружаем данные при пагинации
     useEffect(() => {

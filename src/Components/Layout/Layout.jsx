@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import './Layout.scss'
 import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../Hooks/useAuth'
 import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
-import { Assignment, Search, BarChart, Analytics, Logout, Speed } from '@mui/icons-material'
+import { Assignment, Search, BarChart, Analytics, Logout, Speed, AdminPanelSettings } from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher'
+import { Menu } from '@mui/material'
 
 const Layout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!loading && !user) {
       navigate('/login');
     }
@@ -31,6 +32,14 @@ const Layout = () => {
     }
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   // Show admin panel for superadmin only if they chose to view it
   if (user && isSuperAdmin(user.email) && showAdminPanel) {
     return <AdminPanel onBack={() => setShowAdminPanel(false)} />;
@@ -39,7 +48,7 @@ const Layout = () => {
   if (loading) {
     return (
       <div className="app-layout">
-        <ParticlesBackground />
+        <ParticlesBackground className="fixed-particles" />
         <div className="loading-screen">
           <div className="loading-spinner">Loading...</div>
         </div>
@@ -52,7 +61,7 @@ const Layout = () => {
     console.log('User is pending approval:', user);
     return (
       <div className="app-layout auth-only-layout">
-        <ParticlesBackground />
+        <ParticlesBackground className="fixed-particles" />
         
         <div className="auth-container">
           <div className="auth-header">
@@ -89,29 +98,44 @@ const Layout = () => {
   return (
     <div className="app-layout">
       <ParticlesBackground />
-      <div className="sidebar">
+      
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <button className="mobile-burger" onClick={toggleMobileMenu}>
+          <Menu />
+        </button>
+        <div className="mobile-logo">
+          <img src="/logo-gov.svg" alt="PublicPulse" />
+          <span>PublicPulse</span>
+        </div>
+        <div className="mobile-user">
+          <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
+          <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      <div 
+        className={`sidebar-overlay ${isMobileMenuOpen ? 'active' : ''}`}
+        onClick={closeMobileMenu}
+      ></div>
+
+      {/* Sidebar */}
+      <div className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
           <img src="/logo-gov.svg" alt="Public Pulse" />
           <span>Public Pulse</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/dashboard" end className={({ isActive }) => isActive ? 'active' : ''}>
             <Speed className="sidebar-icon" />
             <span>{t('navigation.dashboard')}</span>
           </NavLink>
-          <NavLink to="/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
             <Assignment className="sidebar-icon" />
             <span>{t('navigation.complaints')}</span>
           </NavLink>
-          <NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>
-            <Search className="sidebar-icon" />
-            <span>{t('navigation.services')}</span>
-          </NavLink>
-          <NavLink to="/reports" className={({ isActive }) => isActive ? 'active' : ''}>
-            <BarChart className="sidebar-icon" />
-            <span>{t('navigation.reports')}</span>
-          </NavLink>
-          <NavLink to="/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
             <Analytics className="sidebar-icon" />
             <span>{t('navigation.analytics')}</span>
           </NavLink>
@@ -122,8 +146,13 @@ const Layout = () => {
             <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
           </div>
           {isSuperAdmin(user?.email) && (
-            <button onClick={() => setShowAdminPanel(true)} className="admin-panel-button">
-              Админ панель
+            <button 
+              onClick={() => setShowAdminPanel(true)} 
+              className="admin-panel-button"
+              aria-label="Открыть админ панель"
+            >
+              <AdminPanelSettings className="sidebar-icon" />
+              <span>Админ панель</span>
             </button>
           )}
           <div className="language-switcher sidebar-language">
@@ -135,6 +164,7 @@ const Layout = () => {
           </button>
         </div>
       </div>
+
       <div className="main-layout-content">
         <main className="main-content">
           <div className="container">

@@ -39,3 +39,6 @@ tg_bot/__pycache__
 /publicpulse-2025-adf4c6e9d3e0.json
 
 __pycache__
+.env
+*.json
+.cursorignore

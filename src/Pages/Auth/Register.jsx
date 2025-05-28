@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUpUser } from '../../firebase/auth';
 import './Register.scss';
+import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesBackground';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -74,6 +75,7 @@ const Register = () => {
             </div>
           </div>
         </div>
+        <ParticlesBackground className="fixed-particles" />
       </div>
     );
   }
@@ -160,6 +162,7 @@ const Register = () => {
           </div>
         </div>
       </div>
+      <ParticlesBackground className="fixed-particles" />
     </div>
   );
 };
