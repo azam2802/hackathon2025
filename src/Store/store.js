@@ -321,7 +321,7 @@ export const useAnalyticsStore = create((set, get) => ({
       // Finalize avgResolutionTime and problemServices for each region
       Object.keys(regionAnalytics).forEach(region => {
         const reg = regionAnalytics[region];
-        reg.avgResolutionTime = reg.resolvedCount > 0 ? +(reg.avgResolutionTime / reg.resolvedCount).toFixed(1) : 0;
+        reg.avgResolutionTime = reg.resolvedCount > 0 ? +(reg.avgResolutionTime / reg.resolvedCount).toFixed(1) : null;
         // Problem services for region
         const serviceCountMap = {};
         allReports.filter(r => (r.region || 'Неизвестно') === region).forEach(r => {

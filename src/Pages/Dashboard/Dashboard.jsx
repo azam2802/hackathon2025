@@ -101,6 +101,7 @@ const Dashboard = () => {
   
   // Функция для правильного склонения слова "день"
   const formatDays = (days) => {
+    if (days === null || days === undefined) return t('dashboard.noData');
     return `${days} ${t("complaints.days")}`;
   };
   
@@ -226,10 +227,7 @@ const Dashboard = () => {
         <div className="card" data-aos="zoom-in" data-aos-delay="400">
           <div className="card-title">{t('dashboard.averageResolutionTime')}</div>
           <div className="card-value">
-            {loading ? t('dashboard.loading') : avgResolutionTime === 0 
-              ? t('dashboard.noData') 
-              : formatDays(avgResolutionTime)
-            }
+            {loading ? t('dashboard.loading') : formatDays(avgResolutionTime !== null && avgResolutionTime !== undefined ? Math.round(avgResolutionTime) : null)}
           </div>
         </div>
         

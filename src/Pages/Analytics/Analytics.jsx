@@ -152,13 +152,13 @@ const Analytics = () => {
 
   // Resolution time analytics
   const resolutionTimeData = useMemo(() => {
-    if (!filteredData.length) return { average: 0, byAgency: [] };
+    if (!filteredData.length) return { average: null, byAgency: [] };
     
     const resolvedReports = filteredData.filter(report => 
       report.status === 'resolved' && report.created_at && report.resolved_at
     );
     
-    if (!resolvedReports.length) return { average: 0, byAgency: [] };
+    if (!resolvedReports.length) return { average: null, byAgency: [] };
     
     let totalDays = 0;
     const agencyTimes = {};
@@ -503,7 +503,11 @@ const Analytics = () => {
             </div>
             
             <div className="stat-card resolution-time">
-              <div className="stat-value">{resolutionTimeData.average.toFixed(1)}</div>
+              <div className="stat-value">
+                {resolutionTimeData.average !== undefined && resolutionTimeData.average !== null 
+                  ? resolutionTimeData.average.toFixed(1)
+                  : t('analytics.noData')}
+              </div>
               <div className="stat-label">{t('analytics.avgResolutionDays')}</div>
             </div>
           </div>
