@@ -11,9 +11,10 @@ from datetime import datetime
 
 load_dotenv()
 
+
 def get_openai_client():
     """Initialize and return OpenAI client with proper error handling."""
-    api_key = os.getenv('OPENAI_API_KEY')
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise ValueError(
             "OPENAI_API_KEY environment variable is not set. "
@@ -21,18 +22,22 @@ def get_openai_client():
         )
     return OpenAI(api_key=api_key)
 
+
 def load_agency_data():
     """Load agency data from JSON file."""
     current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    with open(os.path.join(current_dir, 'agency.json'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(current_dir, "agency.json"), "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def analyze_report_text(report_text):
     """Analyze report text using OpenAI to determine the service and agency."""
     agency_data = load_agency_data()
-    
+
     # Create a prompt for OpenAI
-    services_list = "\n".join([f"- {item['service']} ({item['agency']})" for item in agency_data])
+    services_list = "\n".join(
+        [f"- {item['service']} ({item['agency']})" for item in agency_data]
+    )
     prompt = f"""Given the following report text, determine which government service it relates to from the list below.
     You must return a valid JSON object with exactly these fields: service and agency.
     The service must match exactly one of the services from the list below.
@@ -56,10 +61,13 @@ def analyze_report_text(report_text):
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that categorizes citizen reports into government services. You must return only valid JSON."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that categorizes citizen reports into government services. You must return only valid JSON.",
+                },
+                {"role": "user", "content": prompt},
             ],
-            temperature=0.3
+            temperature=0.3,
         )
 
         # Get the response content
@@ -69,18 +77,25 @@ def analyze_report_text(report_text):
         # Parse the response
         try:
             result = json.loads(response_content)
-            if not isinstance(result, dict) or 'service' not in result or 'agency' not in result:
+            if (
+                not isinstance(result, dict)
+                or "service" not in result
+                or "agency" not in result
+            ):
                 print("Invalid response format - missing required fields")
                 return {"service": "Spam", "agency": "Spam", "importance": "low"}
-            
+
             # Verify the service exists in our list
-            service_exists = any(item['service'] == result['service'] and item['agency'] == result['agency'] 
-                               for item in agency_data)
-            
+            service_exists = any(
+                item["service"] == result["service"]
+                and item["agency"] == result["agency"]
+                for item in agency_data
+            )
+
             if not service_exists:
                 print(f"Service/Agency pair not found in our list: {result}")
                 return {"service": "Spam", "agency": "Spam", "importance": "low"}
-                
+
             return result
         except json.JSONDecodeError as e:
             print(f"JSON parsing error: {str(e)}")
@@ -92,87 +107,117 @@ def analyze_report_text(report_text):
         print(f"Unexpected error: {str(e)}")
         return {"service": "Spam", "agency": "Spam", "importance": "low"}
 
+
 def save_to_firebase(report_data):
     """Save the report data to Firebase Firestore."""
     try:
         # Get Firestore client
         db = firestore.client()
-        
-        # Set the document ID to the value of 'rpt'
-        document_id = report_data['rpt']
-        
+
+        # Use the provided ID if available, otherwise generate a unique one
+        document_id = (
+            report_data.get("id")
+            or f"report_{datetime.now().strftime('%Y%m%d_%H%m%S')}"
+        )
+
         # Add the report to the 'reports' collection with the specified document ID
-        db.collection('reports').document(document_id).set(report_data)
-        
+        db.collection("reports").document(document_id).set(report_data)
+
         return True
     except Exception as e:
         print(f"Error saving to Firebase: {str(e)}")
-        return False    
+        return False
+
 
 def process_report(report_data):
     """Process a report: analyze it and save to Firebase."""
     # Handle photo upload if present
-    if 'photo_data' in report_data and report_data['photo_data']:
+    if "photo_data" in report_data and report_data["photo_data"]:
         try:
             print("Starting photo upload process...")
-            # Decode base64 photo data
-            photo_data = report_data['photo_data']
-            if isinstance(photo_data, str):
+            # Get photo data
+            photo_data_url = report_data["photo_data"]
+
+            # Extract base64 string from data URL (e.g., remove 'data:image/jpeg;base64,')
+            if ";base64," in photo_data_url:
+                header, base64_string = photo_data_url.split(",", 1)
+                # Attempt to decode base64 string
                 try:
-                    # Try to decode base64 string
-                    photo_bytes = base64.b64decode(photo_data)
+                    photo_bytes = base64.b64decode(base64_string)
                     print("Successfully decoded base64 photo data")
+
+                    # Determine content type from header if possible, otherwise default
+                    content_type = "image/jpeg"  # Default
+                    if header.startswith("data:") and ";" in header:
+                        content_type_part = header[5 : header.index(";")]
+                        if "/" in content_type_part:
+                            content_type = content_type_part
+                    print(f"Determined content type: {content_type}")
+
                 except Exception as decode_error:
                     print(f"Base64 decode error: {str(decode_error)}")
-                    # If not base64, use as is
-                    photo_bytes = photo_data.encode('utf-8')
-                    print("Using raw string as photo data")
+                    raise ValueError(
+                        "Invalid base64 data"
+                    )  # Raise error for invalid data
             else:
-                photo_bytes = photo_data
-                print("Using raw bytes as photo data")
+                # If not a data URL with base64, assume it's not a valid photo data to upload
+                print("Photo data is not a valid base64 data URL. Skipping upload.")
+                photo_bytes = None  # Do not upload if data is not in expected format
+                content_type = None
 
-            # Upload photo data to GCP
-            bucket = storage.bucket('public-pulse')
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            date_path = datetime.now().strftime("%Y%m%d")
-            blob_path = f'reports/{date_path}/{timestamp}.jpg'
-            print(f"Uploading to blob path: {blob_path}")
-            blob = bucket.blob(blob_path)
-            
-            # Upload from bytes
-            blob.upload_from_string(
-                photo_bytes,
-                content_type='image/jpeg'
-            )
-            print("Successfully uploaded photo to GCP")
-            
-            # Generate the public URL using the correct format
-            public_url = f"https://storage.googleapis.com/public-pulse/{blob_path}"
-            print(f"Generated public URL: {public_url}")
-            report_data['photo_url'] = public_url
-            del report_data['photo_data']
-            print(f"Photo URL set in report_data: {report_data['photo_url']}")
+            if photo_bytes:
+                # Upload photo data to GCP
+                bucket = storage.bucket("public-pulse")
+                timestamp = datetime.now().strftime(
+                    "%Y%m%d_%H%m%S"
+                )  # Fixed time format
+                date_path = datetime.now().strftime("%Y%m%d")
+                blob_path = f"reports/{date_path}/{timestamp}.jpg"  # Keep as jpg for consistency, consider parsing extension from content_type if needed
+                print(f"Uploading to blob path: {blob_path}")
+                blob = bucket.blob(blob_path)
+
+                # Upload from bytes
+                blob.upload_from_string(
+                    photo_bytes, content_type=content_type or "image/jpeg"
+                )  # Use determined content type or default
+                print("Successfully uploaded photo to GCP")
+
+                # Generate the public URL
+                # Construct the URL correctly
+                # Note: Public access to bucket or blob must be configured in GCP
+                public_url = f"https://storage.googleapis.com/{bucket.name}/{blob_path}"
+                print(f"Generated public URL: {public_url}")
+                report_data["photo_url"] = public_url
+                # Keep photo_data in report_data for now, can remove later if not needed downstream
+                # del report_data["photo_data"]
+                print(
+                    f"Photo URL set in report_data: {report_data.get('photo_url')}"
+                )  # Use .get for safety
+            else:
+                # If photo data was not suitable for upload, ensure no photo_url is set
+                report_data["photo_url"] = None
+                # Also remove photo_data if it was present but invalid format
+                if "photo_data" in report_data:
+                    del report_data["photo_data"]
+
         except Exception as e:
             print(f"Error uploading photo to GCP: {str(e)}")
             print(f"Error type: {type(e)}")
-            report_data['photo_url'] = None
-            if 'photo_data' in report_data:
-                del report_data['photo_data']
-    
+            report_data["photo_url"] = None
+            if "photo_data" in report_data:
+                del report_data["photo_data"]
+
     # Analyze the report text
-    analysis_result = analyze_report_text(report_data['report_text'])
-    
+    analysis_result = analyze_report_text(report_data["report_text"])
+
     # Add the analysis results to the report data
-    report_data['service'] = analysis_result['service']
-    report_data['agency'] = analysis_result['agency']
-    report_data['importance'] = analysis_result['importance']
-    
+    report_data["service"] = analysis_result["service"]
+    report_data["agency"] = analysis_result["agency"]
+    report_data["importance"] = analysis_result["importance"]
+
     # Save to Firebase
     print(f"Final report_data before saving to Firebase: {report_data}")
     success = save_to_firebase(report_data)
     print(f"Save to Firebase result: {success}")
-    
-    return {
-        'success': success,
-        'data': report_data
-    } 
+
+    return {"success": success, "data": report_data}

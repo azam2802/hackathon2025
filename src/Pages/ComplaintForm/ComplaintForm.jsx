@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ComplaintForm.scss';
 import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesBackground';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { useTranslation } from 'react-i18next';
+import { useComplaintApi } from '../../hooks/useComplaintApi';
 import { 
   Assignment, 
   LocationOn, 
@@ -13,7 +14,9 @@ import {
   Feedback,
   Person,
   Phone,
-  Email
+  Email,
+  PhotoCamera,
+  Delete
 } from '@mui/icons-material';
 import { 
   getTranslatedRegions, 
@@ -22,6 +25,7 @@ import {
 
 const ComplaintForm = () => {
   const { t } = useTranslation();
+  const { submitComplaint, isLoading, error } = useComplaintApi();
   const [formData, setFormData] = useState({
     report_text: '',
     recommendations: '',
@@ -33,11 +37,16 @@ const ComplaintForm = () => {
     phone: '',
     email: '',
     importance: 'medium',
-    language: 'ru'
+    language: 'ru',
+    photo_data: null,
+    id: null
   });
 
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [reportId, setReportId] = useState(null);
 
   // Initialize AOS animations
   useEffect(() => {
@@ -100,40 +109,21 @@ const ComplaintForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Form submission simulation (your API logic will go here)
-    try {
-      // Create data object as in telegram bot
-      const complaintData = {
-        ...formData,
-        // Combine contact information for telegram format compatibility
-        contact_info: [formData.full_name, formData.phone, formData.email]
-          .filter(Boolean)
-          .join(', ') || null,
-        created_at: new Date().toLocaleString(t('common.locale'), {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        status: 'pending',
-        submission_source: 'website',
-        location_source: 'manual_input',
-        latitude: null,
-        longitude: null,
-        // Set default values for missing fields
-        service: t('complaintForm.defaultService'),
-        agency: t('complaintForm.defaultAgency')
-      };
+    // Generate a unique ID before submitting
+    const generatedId = Math.random().toString(36).substr(2, 9).toLowerCase();
+    setReportId(generatedId);
 
-      console.log('Submitting complaint:', complaintData);
-      
-      // API request simulation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+    const dataToSubmit = {
+      ...formData,
+      id: generatedId
+    };
+
+    try {
+      const result = await submitComplaint(dataToSubmit);
+      console.log('Жалоба успешно отправлена:', result);
       setShowSuccess(true);
       
-      // Reset form
+      // Reset form, but keep the generated ID for display
       setFormData({
         report_text: '',
         recommendations: '',
@@ -145,14 +135,56 @@ const ComplaintForm = () => {
         phone: '',
         email: '',
         importance: 'medium',
-        language: 'ru'
+        language: 'ru',
+        photo_data: null,
+        id: null
       });
 
     } catch (error) {
-      console.error('Error submitting complaint:', error);
+      console.error('Ошибка при отправке жалобы:', error);
       alert(t('complaintForm.errorMessage'));
+      setReportId(null);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Проверяем тип файла
+      if (!file.type.startsWith('image/')) {
+        alert(t('complaintForm.photoTypeError'));
+        return;
+      }
+
+      // Проверяем размер файла (максимум 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert(t('complaintForm.photoSizeError'));
+        return;
+      }
+
+      // Создаем превью
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+        setFormData(prev => ({
+          ...prev,
+          photo_data: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPreviewUrl(null);
+    setFormData(prev => ({
+      ...prev,
+      photo_data: null
+    }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -166,7 +198,7 @@ const ComplaintForm = () => {
           </div>
           <h1>{t('complaintForm.successTitle')}</h1>
           <p>{t('complaintForm.successMessage')}</p>
-          <p>{t('complaintForm.successNumber')} <strong>#{Math.random().toString(36).substr(2, 9).toUpperCase()}</strong></p>
+          <p>{t('complaintForm.successNumber')} <strong>#{reportId}</strong></p>
           <div className="success-actions">
             <button 
               className="btn btn-primary" 
@@ -241,6 +273,45 @@ const ComplaintForm = () => {
             </div>
           </div>
         )}
+
+         <div className="form-section" data-aos="fade-up" data-aos-delay="350">
+          <h3>
+            <PhotoCamera style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
+            {t('complaintForm.photoTitle')}
+          </h3>
+          <div className="photo-upload-container">
+            <div className="photo-upload-area" onClick={() => fileInputRef.current?.click()}>
+              {previewUrl ? (
+                <div className="photo-preview">
+                  <img src={previewUrl} alt="Preview" />
+                  <button 
+                    type="button" 
+                    className="remove-photo-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemovePhoto();
+                    }}
+                  >
+                    <Delete />
+                  </button>
+                </div>
+              ) : (
+                <div className="upload-placeholder">
+                  <PhotoCamera style={{ fontSize: '3rem', color: '#667eea' }} />
+                  <p>{t('complaintForm.photoPlaceholder')}</p>
+                  <small>{t('complaintForm.photoHint')}</small>
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoChange}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
 
         <div className="form-section" data-aos="fade-up" data-aos-delay="200">
           <h3>
@@ -322,6 +393,8 @@ const ComplaintForm = () => {
             />
           </div>
         </div>
+
+       
 
         <div className="form-section" data-aos="fade-up" data-aos-delay="400">
           <h3>

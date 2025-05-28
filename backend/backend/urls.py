@@ -14,12 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
 from analyze.views import HelloWorld, ReportSubmissionView
+from .geocoding import geocode_location
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/hello/', HelloWorld.as_view(), name='hello'),
-    path('api/reports/', ReportSubmissionView.as_view(), name='submit_report'),
+    path("admin/", admin.site.urls),
+    path("api/hello/", HelloWorld.as_view(), name="hello"),
+    path("api/reports/", ReportSubmissionView.as_view(), name="submit_report"),
+    path("api/geocode/", geocode_location, name="geocode"),
 ]
