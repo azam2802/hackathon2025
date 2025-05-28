@@ -1,9 +1,10 @@
 import './App.scss'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './Pages/Home/Home'
 import Layout from './Components/Layout/Layout'
 import Dashboard from './Pages/Dashboard/Dashboard'
 import Complaints from './Pages/Complaints/Complaints'
+import ComplaintForm from './Pages/ComplaintForm/ComplaintForm'
 import Analytics from './Pages/Analytics/Analytics'
 import { AuthProvider } from './contexts/AuthContext'
 import Login from './Pages/Auth/Login'
@@ -15,6 +16,7 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/complaint-form" element={<ComplaintForm />} />
         <Route path="/login" element={
           <div className="auth-only-layout">
             <ParticlesBackground className="fixed-particles" />
