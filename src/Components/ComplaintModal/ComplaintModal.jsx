@@ -4,6 +4,57 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import './ComplaintModal.scss';
 
+// Функция для парсинга даты из разных форматов
+const parseDate = (dateString) => {
+  if (!dateString) return null;
+  
+  let parsedDate;
+  
+  // Проверяем формат даты "dd.MM.YYYY HH:mm"
+  if (dateString.includes('.')) {
+    const [datePart, timePart] = dateString.split(' ');
+    const [day, month, year] = datePart.split('.').map(num => parseInt(num, 10));
+    
+    if (timePart) {
+      const [hours, minutes] = timePart.split(':').map(num => parseInt(num, 10));
+      parsedDate = new Date(year, month - 1, day, hours, minutes);
+    } else {
+      parsedDate = new Date(year, month - 1, day);
+    }
+  } 
+  // Проверяем формат даты "dd-MM-YYYY" или "YYYY-MM-DD"
+  else if (dateString.includes('-')) {
+    // Проверяем, не является ли это ISO форматом (YYYY-MM-DD)
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      // Если первая часть - год (4 цифры)
+      if (parts[0].length === 4) {
+        // ISO формат (YYYY-MM-DD)
+        const [year, month, day] = parts.map(num => parseInt(num, 10));
+        parsedDate = new Date(year, month - 1, day);
+      } else {
+        // Наш формат (DD-MM-YYYY)
+        const [day, month, year] = parts.map(num => parseInt(num, 10));
+        parsedDate = new Date(year, month - 1, day);
+      }
+    }
+  }
+  // Пробуем стандартный парсинг для ISO и других форматов
+  else {
+    parsedDate = new Date(dateString);
+    if (isNaN(parsedDate.getTime())) {
+      return null;
+    }
+  }
+  
+  // Проверяем валидность даты
+  if (!parsedDate || isNaN(parsedDate.getTime())) {
+    return null;
+  }
+  
+  return parsedDate;
+};
+
 const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -145,6 +196,56 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
     }
   };
   
+  // Проверяем, просрочено ли обращение
+  const isOverdue = () => {
+    if (!complaint || !complaint.created_at || 
+        complaint.status === 'resolved' || 
+        complaint.status === 'cancelled') {
+      return false;
+    }
+    
+    const createdDate = parseDate(complaint.created_at);
+    if (!createdDate) return false;
+    
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    
+    return createdDate <= monthAgo;
+  };
+  
+  // Функция для расчета количества прошедших дней
+  const getDaysPassed = () => {
+    if (!complaint || !complaint.created_at) return 0;
+    
+    const createdDate = parseDate(complaint.created_at);
+    if (!createdDate) return 0;
+    
+    const today = new Date();
+    return Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+  };
+  
+  // Функция для форматирования срока просрочки
+  const formatDaysPassed = (days) => {
+    if (!days) return '';
+    
+    const lastDigit = days % 10;
+    const lastTwoDigits = days % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+      return `${days} дней`;
+    }
+    
+    if (lastDigit === 1) {
+      return `${days} день`;
+    }
+    
+    if (lastDigit >= 2 && lastDigit <= 4) {
+      return `${days} дня`;
+    }
+    
+    return `${days} дней`;
+  };
+  
   // Рендерим модальное окно через портал в корень документа
   return createPortal(
     <div className={`complaint-modal ${isOpen ? 'open' : ''}`}>
@@ -152,6 +253,11 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
       <div className="modal-content">
         <div className="modal-header">
           <h2>Обращение #{complaint.id.substring(0, 5)}</h2>
+          {isOverdue() && (
+            <div className="overdue-badge">
+              Просрочено на {formatDaysPassed(getDaysPassed())}
+            </div>
+          )}
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         

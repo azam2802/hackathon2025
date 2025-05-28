@@ -125,6 +125,14 @@ $glass-border: 1px solid rgba(255, 255, 255, 0.18);
         text-transform: uppercase;
         letter-spacing: 1px;
       }
+      
+      &.overdue-stat {
+        .alert-value {
+          color: var(--danger-color);
+          font-weight: bold;
+          animation: pulse 2s infinite;
+        }
+      }
     }
   }
   
@@ -582,4 +590,40 @@ $glass-border: 1px solid rgba(255, 255, 255, 0.18);
 
 .float {
   animation: float 5s ease-in-out infinite;
+}
+
+.days-overdue {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.alert-table tr {
+  background-color: rgba(255, 220, 220, 0.1);
+  
+  &:hover {
+    background-color: rgba(255, 220, 220, 0.2);
+  }
+}
+
+.btn-filter-overdue {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  
+  &:hover {
+    background-color: rgba(255, 50, 50, 0.1);
+    border-color: var(--danger-color);
+  }
+  
+  &.active {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+  }
 } 
