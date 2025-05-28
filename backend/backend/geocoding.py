@@ -20,14 +20,37 @@ CITY_COORDINATES = {
 def geocode_location(request):
     """
     Эндпоинт для геокодинга адреса
+    Принимает параметры:
+    - city: название города (обязательный)
+    - street: название улицы (опциональный)
+    - house: номер дома (опциональный)
     """
+    print("Request data:", request.data)
+    print("Request GET params:", request.GET)
+    print("Request headers:", request.headers)
+    print("Request method:", request.method)
+    print("Request user:", request.user)
+    print("Request auth:", request.auth)
     city_name = request.GET.get("city")
+    street = request.GET.get("street", "")
+    house = request.GET.get("house", "")
+
     if not city_name:
         return Response({"error": "City name is required"}, status=400)
 
     try:
+        # Формируем полный адрес для поиска
+        address_parts = []
+        if house:
+            address_parts.append(house)
+        if street:
+            address_parts.append(street)
+        address_parts.append(city_name)
+        address_parts.append("Кыргызстан")
+
+        search_query = ", ".join(address_parts)
+
         # Сначала пробуем получить координаты через Google Maps
-        search_query = f"{city_name}, Кыргызстан"
         result = gmaps.geocode(search_query)
 
         if result:
@@ -38,10 +61,11 @@ def geocode_location(request):
                     "longitude": location["lng"],
                     "address": result[0]["formatted_address"],
                     "source": "google_maps",
+                    "full_query": search_query,
                 }
             )
 
-        # Если Google Maps не нашел результат, используем предустановленные координаты
+        # Если Google Maps не нашел результат, используем предустановленные координаты города
         coordinates = CITY_COORDINATES.get(city_name)
         if coordinates:
             latitude, longitude = coordinates
@@ -49,8 +73,10 @@ def geocode_location(request):
                 {
                     "latitude": latitude,
                     "longitude": longitude,
-                    "address": f"{city_name}, Кыргызстан",
+                    "address": f"{search_query}",
                     "source": "fallback_coordinates",
+                    "full_query": search_query,
+                    "warning": "Точные координаты не найдены, использованы координаты центра города",
                 }
             )
 

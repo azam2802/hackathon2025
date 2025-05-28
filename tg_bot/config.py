@@ -139,17 +139,29 @@ CITY_COORDINATES = {
 }
 
 
-def config_get_coordinates(city_name: str) -> Optional[Dict[str, Any]]:
+def config_get_coordinates(
+    city_name: str, street: str = "", house: str = ""
+) -> Optional[Dict[str, Any]]:
     """
-    Get coordinates for a city using the backend API
+    Get coordinates for a location using the backend API
+    Args:
+        city_name: название города
+        street: название улицы (опционально)
+        house: номер дома (опционально)
     """
     if API_ENABLED:
         try:
             import requests
 
+            params = {"city": city_name}
+            if street:
+                params["street"] = street
+            if house:
+                params["house"] = house
+
             response = requests.get(
                 f"{API_BASE_URL}/api/geocode/",
-                params={"city": city_name},
+                params=params,
                 headers={"Authorization": f"Bearer {API_KEY}"} if API_KEY else {},
             )
 
@@ -164,11 +176,21 @@ def config_get_coordinates(city_name: str) -> Optional[Dict[str, Any]]:
     coordinates = CITY_COORDINATES.get(city_name)
     if coordinates:
         latitude, longitude = coordinates
+        address_parts = []
+        if house:
+            address_parts.append(house)
+        if street:
+            address_parts.append(street)
+        address_parts.append(city_name)
+        address_parts.append("Кыргызстан")
+        full_address = ", ".join(address_parts)
+
         return {
             "latitude": latitude,
             "longitude": longitude,
-            "address": f"{city_name}, Кыргызстан",
+            "address": full_address,
             "source": "fallback_coordinates",
+            "warning": "Точные координаты не найдены, использованы координаты центра города",
         }
     return None
 

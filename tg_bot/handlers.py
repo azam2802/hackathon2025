@@ -232,6 +232,7 @@ async def process_location(message: Message, state: FSMContext):
     # Определяем регион и город из адреса
     region = "Не определен"
     city = "Не определен"
+    street_address = ""
 
     # Пытаемся определить регион и город из адреса
     if address:
@@ -258,12 +259,20 @@ async def process_location(message: Message, state: FSMContext):
                         city = REGIONS_CITIES[region][0]
                     break
 
+        # Формируем адрес улицы (все части адреса до города)
+        street_parts = []
+        for part in address_parts:
+            if part == city:
+                break
+            street_parts.append(part)
+        street_address = ", ".join(street_parts)
+
     # Если регион и город все еще не определены, используем координаты для определения
     if region == "Не определен" or city == "Не определен":
         # Определяем регион по координатам
         for reg, cities in REGIONS_CITIES.items():
             for city_name in cities:
-                city_coords = get_city_coordinates(city_name)
+                city_coords = get_city_coordinates("", city_name)
                 if city_coords:
                     # Простая проверка на близость координат
                     lat_diff = abs(city_coords["latitude"] - message.location.latitude)
@@ -277,7 +286,16 @@ async def process_location(message: Message, state: FSMContext):
             if region != "Не определен":
                 break
 
-    await state.update_data(location=location_data, region=region, city=city)
+    # Получаем координаты с учетом полного адреса
+    full_address = f"{street_address}, {city}" if street_address else city
+    location_data = get_city_coordinates(full_address, city)
+
+    await state.update_data(
+        location=location_data,
+        region=region,
+        city=city,
+        address=street_address if street_address else "Не указан",
+    )
 
     await message.answer(
         get_text("location_selected", lang), reply_markup=ReplyKeyboardRemove()
@@ -288,7 +306,7 @@ async def process_location(message: Message, state: FSMContext):
         f"✅ Тип обращения: **{data.get('type')}**\n"
         f"✅ Регион: **{region}**\n"
         f"✅ Населенный пункт: **{city}**\n"
-        f"✅ Адрес: **{address}**\n\n"
+        f"✅ Адрес: **{street_address if street_address else 'Не указан'}**\n\n"
         f"Изложите суть обращения:",
         parse_mode="Markdown",
     )
@@ -727,15 +745,23 @@ async def process_address(message: Message, state: FSMContext):
     data = await state.get_data()
     lang = get_user_language(data)
 
-    address = message.text
+    address = message.text.strip()
     city = data.get("city")
 
-    # Пытаемся получить координаты по введенному адресу
-    location_data = get_city_coordinates(f"{address}, {city}")
+    # Формируем полный адрес
+    full_address = f"{address}, {city}" if address else city
 
-    # Если Google Maps не дал координаты, используем координаты города
+    # Пытаемся получить координаты по введенному адресу
+    location_data = get_city_coordinates(address, city)
+
+    # Если координаты не найдены или произошла ошибка, используем координаты города
     if not location_data or location_data.get("source") != "google_maps":
-        location_data = get_city_coordinates(city)
+        location_data = get_city_coordinates("", city)
+        if location_data:
+            location_data["address"] = full_address
+            location_data["warning"] = (
+                "Точные координаты не найдены, использованы координаты центра города"
+            )
 
     await state.update_data(
         address=address,  # Сохраняем введенный адрес
@@ -772,15 +798,15 @@ async def skip_address_inline(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
 
     # Используем координаты города, если адрес пропущен
-    location_data = get_city_coordinates(city)
+    location_data = get_city_coordinates("", city)
     await state.update_data(
         address="Не указан",  # Сохраняем, что адрес не указан
         location=location_data,  # Сохраняем координаты города
     )
 
     await callback.message.answer(
-        get_text("address_skipped", lang),  # Можно использовать тот же текст или другой
-        reply_markup=ReplyKeyboardRemove(),  # Убираем Reply клавиатуру, если она была
+        get_text("address_skipped", lang),
+        reply_markup=ReplyKeyboardRemove(),
     )
 
     # Переходим к вводу текста обращения
