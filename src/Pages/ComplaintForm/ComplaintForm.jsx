@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ComplaintForm.scss';
 import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesBackground';
 import AOS from 'aos';
@@ -14,7 +14,9 @@ import {
   Feedback,
   Person,
   Phone,
-  Email
+  Email,
+  PhotoCamera,
+  Delete
 } from '@mui/icons-material';
 import { 
   getTranslatedRegions, 
@@ -35,9 +37,12 @@ const ComplaintForm = () => {
     phone: '',
     email: '',
     importance: 'medium',
-    language: 'ru'
+    language: 'ru',
+    photo_data: null
   });
 
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -119,7 +124,8 @@ const ComplaintForm = () => {
         phone: '',
         email: '',
         importance: 'medium',
-        language: 'ru'
+        language: 'ru',
+        photo_data: null
       });
 
     } catch (error) {
@@ -127,6 +133,45 @@ const ComplaintForm = () => {
       alert(t('complaintForm.errorMessage'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Проверяем тип файла
+      if (!file.type.startsWith('image/')) {
+        alert(t('complaintForm.photoTypeError'));
+        return;
+      }
+
+      // Проверяем размер файла (максимум 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert(t('complaintForm.photoSizeError'));
+        return;
+      }
+
+      // Создаем превью
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+        setFormData(prev => ({
+          ...prev,
+          photo_data: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPreviewUrl(null);
+    setFormData(prev => ({
+      ...prev,
+      photo_data: null
+    }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -216,6 +261,45 @@ const ComplaintForm = () => {
           </div>
         )}
 
+         <div className="form-section" data-aos="fade-up" data-aos-delay="350">
+          <h3>
+            <PhotoCamera style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
+            {t('complaintForm.photoTitle')}
+          </h3>
+          <div className="photo-upload-container">
+            <div className="photo-upload-area" onClick={() => fileInputRef.current?.click()}>
+              {previewUrl ? (
+                <div className="photo-preview">
+                  <img src={previewUrl} alt="Preview" />
+                  <button 
+                    type="button" 
+                    className="remove-photo-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemovePhoto();
+                    }}
+                  >
+                    <Delete />
+                  </button>
+                </div>
+              ) : (
+                <div className="upload-placeholder">
+                  <PhotoCamera style={{ fontSize: '3rem', color: '#667eea' }} />
+                  <p>{t('complaintForm.photoPlaceholder')}</p>
+                  <small>{t('complaintForm.photoHint')}</small>
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoChange}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
+
         <div className="form-section" data-aos="fade-up" data-aos-delay="200">
           <h3>
             <Feedback style={{ marginRight: '8px', fontSize: '1.5rem', color: '#667eea' }} />
@@ -296,6 +380,8 @@ const ComplaintForm = () => {
             />
           </div>
         </div>
+
+       
 
         <div className="form-section" data-aos="fade-up" data-aos-delay="400">
           <h3>
