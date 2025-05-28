@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-import googlemaps
 from typing import Optional, Tuple, Dict, Any
 
 load_dotenv()
@@ -9,11 +8,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", 0))
 
 # Google Maps API Configuration
-GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
-USE_GOOGLE_MAPS = os.getenv("USE_GOOGLE_MAPS", "true").lower() == "true"
+
 
 # Initialize Google Maps client if API key is provided
-gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY) if GOOGLE_MAPS_API_KEY else None
 
 # Django Backend API Configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
@@ -142,39 +139,58 @@ CITY_COORDINATES = {
 }
 
 
-def config_get_coordinates(city_name: str) -> Optional[Dict[str, Any]]:
+def config_get_coordinates(
+    city_name: str, street: str = "", house: str = ""
+) -> Optional[Dict[str, Any]]:
     """
-    Get coordinates for a city using Google Maps API first,
-    fallback to predefined coordinates if Google Maps fails
+    Get coordinates for a location using the backend API
+    Args:
+        city_name: название города
+        street: название улицы (опционально)
+        house: номер дома (опционально)
     """
-    if USE_GOOGLE_MAPS and gmaps:
+    if API_ENABLED:
         try:
-            # Add "Кыргызстан" to improve search accuracy
-            search_query = f"{city_name}, Кыргызстан"
-            result = gmaps.geocode(search_query)
+            import requests
 
-            if result:
-                location = result[0]["geometry"]["location"]
-                print("location", location)
-                return {
-                    "latitude": location["lat"],
-                    "longitude": location["lng"],
-                    "address": result[0]["formatted_address"],
-                    "source": "google_maps",
-                }
+            params = {"city": city_name}
+            if street:
+                params["street"] = street
+            if house:
+                params["house"] = house
+
+            response = requests.get(
+                f"{API_BASE_URL}/api/geocode/",
+                params=params,
+                headers={"Authorization": f"Bearer {API_KEY}"} if API_KEY else {},
+            )
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Error from API: {response.status_code} - {response.text}")
         except Exception as e:
-            print(f"Error getting coordinates from Google Maps: {e}")
+            print(f"Error calling geocoding API: {e}")
 
     # Fallback to predefined coordinates
     coordinates = CITY_COORDINATES.get(city_name)
-    print("ddddddddddd")
     if coordinates:
         latitude, longitude = coordinates
+        address_parts = []
+        if house:
+            address_parts.append(house)
+        if street:
+            address_parts.append(street)
+        address_parts.append(city_name)
+        address_parts.append("Кыргызстан")
+        full_address = ", ".join(address_parts)
+
         return {
             "latitude": latitude,
             "longitude": longitude,
-            "address": f"{city_name}, Кыргызстан",
+            "address": full_address,
             "source": "fallback_coordinates",
+            "warning": "Точные координаты не найдены, использованы координаты центра города",
         }
     return None
 

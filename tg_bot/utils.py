@@ -116,9 +116,34 @@ def format_location_info(
         )
 
 
-def get_city_coordinates(city_name: str) -> Optional[Dict[str, Any]]:
-    """Get coordinates for a selected city"""
-    return config_get_coordinates(city_name)
+def get_city_coordinates(address: str, city: str = "") -> Optional[Dict[str, Any]]:
+    """
+    Get coordinates for a location
+    Args:
+        address: полный адрес или название улицы
+        city: название города (опционально)
+    """
+    try:
+        # Если передан только город без адреса
+        if not address and city:
+            return config_get_coordinates(city)
+
+        # Если передан полный адрес
+        if address:
+            # Если город не указан в адресе, добавляем его
+            if city and city not in address:
+                full_address = f"{address}, {city}"
+            else:
+                full_address = address
+            return config_get_coordinates(full_address)
+
+        return None
+    except Exception as e:
+        print(f"Error in get_city_coordinates: {e}")
+        # В случае ошибки возвращаем координаты города
+        if city:
+            return config_get_coordinates(city)
+        return None
 
 
 async def get_address_from_coordinates(latitude: float, longitude: float) -> str:
