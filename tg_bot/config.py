@@ -195,4 +195,4 @@ def config_get_coordinates(
     return None
 
 
-REPORT_TYPES = ["Жалоба", "Рекомендации"]
+REPORT_TYPES = ["Жалоба"]
