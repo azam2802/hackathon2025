@@ -135,40 +135,71 @@ def process_report(report_data):
     if "photo_data" in report_data and report_data["photo_data"]:
         try:
             print("Starting photo upload process...")
-            # Decode base64 photo data
-            photo_data = report_data["photo_data"]
-            if isinstance(photo_data, str):
+            # Get photo data
+            photo_data_url = report_data["photo_data"]
+
+            # Extract base64 string from data URL (e.g., remove 'data:image/jpeg;base64,')
+            if ";base64," in photo_data_url:
+                header, base64_string = photo_data_url.split(",", 1)
+                # Attempt to decode base64 string
                 try:
-                    # Try to decode base64 string
-                    photo_bytes = base64.b64decode(photo_data)
+                    photo_bytes = base64.b64decode(base64_string)
                     print("Successfully decoded base64 photo data")
+
+                    # Determine content type from header if possible, otherwise default
+                    content_type = "image/jpeg"  # Default
+                    if header.startswith("data:") and ";" in header:
+                        content_type_part = header[5 : header.index(";")]
+                        if "/" in content_type_part:
+                            content_type = content_type_part
+                    print(f"Determined content type: {content_type}")
+
                 except Exception as decode_error:
                     print(f"Base64 decode error: {str(decode_error)}")
-                    # If not base64, use as is
-                    photo_bytes = photo_data.encode("utf-8")
-                    print("Using raw string as photo data")
+                    raise ValueError(
+                        "Invalid base64 data"
+                    )  # Raise error for invalid data
             else:
-                photo_bytes = photo_data
-                print("Using raw bytes as photo data")
+                # If not a data URL with base64, assume it's not a valid photo data to upload
+                print("Photo data is not a valid base64 data URL. Skipping upload.")
+                photo_bytes = None  # Do not upload if data is not in expected format
+                content_type = None
 
-            # Upload photo data to GCP
-            bucket = storage.bucket("public-pulse")
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            date_path = datetime.now().strftime("%Y%m%d")
-            blob_path = f"reports/{date_path}/{timestamp}.jpg"
-            print(f"Uploading to blob path: {blob_path}")
-            blob = bucket.blob(blob_path)
+            if photo_bytes:
+                # Upload photo data to GCP
+                bucket = storage.bucket("public-pulse")
+                timestamp = datetime.now().strftime(
+                    "%Y%m%d_%H%m%S"
+                )  # Fixed time format
+                date_path = datetime.now().strftime("%Y%m%d")
+                blob_path = f"reports/{date_path}/{timestamp}.jpg"  # Keep as jpg for consistency, consider parsing extension from content_type if needed
+                print(f"Uploading to blob path: {blob_path}")
+                blob = bucket.blob(blob_path)
 
-            # Upload from bytes
-            blob.upload_from_string(photo_bytes, content_type="image/jpeg")
-            print("Successfully uploaded photo to GCP")
+                # Upload from bytes
+                blob.upload_from_string(
+                    photo_bytes, content_type=content_type or "image/jpeg"
+                )  # Use determined content type or default
+                print("Successfully uploaded photo to GCP")
 
-            # Generate the public URL using the correct format
-            public_url = f"https://storage.googleapis.com/public-pulse/{blob_path}"
-            print(f"Generated public URL: {public_url}")
-            report_data["photo_url"] = public_url
-            del report_data["photo_data"]
-            print(f"Photo URL set in report_data: {report_data['photo_url']}")
+                # Generate the public URL
+                # Construct the URL correctly
+                # Note: Public access to bucket or blob must be configured in GCP
+                public_url = f"https://storage.googleapis.com/{bucket.name}/{blob_path}"
+                print(f"Generated public URL: {public_url}")
+                report_data["photo_url"] = public_url
+                # Keep photo_data in report_data for now, can remove later if not needed downstream
+                # del report_data["photo_data"]
+                print(
+                    f"Photo URL set in report_data: {report_data.get('photo_url')}"
+                )  # Use .get for safety
+            else:
+                # If photo data was not suitable for upload, ensure no photo_url is set
+                report_data["photo_url"] = None
+                # Also remove photo_data if it was present but invalid format
+                if "photo_data" in report_data:
+                    del report_data["photo_data"]
+
         except Exception as e:
             print(f"Error uploading photo to GCP: {str(e)}")
             print(f"Error type: {type(e)}")
