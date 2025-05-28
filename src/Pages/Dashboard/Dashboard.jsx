@@ -93,12 +93,8 @@ const Dashboard = () => {
     refreshData: refreshComplaints
   } = useFetchComplaints();
   
-  // Get report generator functions
-  const { 
-    generateDashboardReport,
-    exportComplaintsToCsv,
-    exportComplaintsToExcel
-  } = useReportGenerator();
+  // Get report generator function
+  const { generateDashboardReport } = useReportGenerator();
   
   const loading = analyticsLoading || complaintsLoading;
   const error = analyticsError || complaintsError;
@@ -131,34 +127,6 @@ const Dashboard = () => {
     }
   };
   
-  // Handler for exporting data to CSV
-  const handleExportToCsv = () => {
-    if (loading) return;
-    
-    try {
-      exportComplaintsToCsv({
-        complaints: stats.overdueList || [],
-        stats
-      });
-    } catch (error) {
-      console.error('Error exporting to CSV:', error);
-    }
-  };
-  
-  // Handler for exporting data to Excel
-  const handleExportToExcel = () => {
-    if (loading) return;
-    
-    try {
-      exportComplaintsToExcel({
-        complaints: stats.overdueList || [],
-        stats
-      });
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-    }
-  };
-  
   const navigateToComplaints = (filter) => {
     // Перенаправляем на страницу Complaints с нужным фильтром
     navigate('/complaints', { state: { filter } });
@@ -176,30 +144,6 @@ const Dashboard = () => {
           >
             {t('dashboard.generateReport')}
           </button>
-          <div className="dropdown">
-            <button 
-              className="btn btn-outline dropdown-toggle"
-              disabled={loading}
-            >
-              {t('dashboard.exportData')}
-            </button>
-            <div className="dropdown-menu">
-              <button 
-                className="dropdown-item"
-                onClick={handleExportToCsv}
-                disabled={loading}
-              >
-                CSV
-              </button>
-              <button 
-                className="dropdown-item"
-                onClick={handleExportToExcel}
-                disabled={loading}
-              >
-                Excel
-              </button>
-            </div>
-          </div>
           <button 
             className="btn btn-refresh" 
             onClick={refreshData} 
