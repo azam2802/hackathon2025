@@ -91,6 +91,7 @@ export const useAnalyticsStore = create((set, get) => ({
   loading: false,
   error: null,
   lastFetched: null,
+  selectedRegion: 'all', // Default value for region filter
   
   // Method to check if we need to refresh data
   shouldRefreshData: () => {
@@ -104,9 +105,17 @@ export const useAnalyticsStore = create((set, get) => ({
     return Date.now() - lastFetched > fiveMinutes;
   },
   
+  // Set selected region
+  setSelectedRegion: (region) => {
+    set({ selectedRegion: region });
+    // Force refresh analytics when region changes
+    get().fetchAnalytics(true);
+  },
+  
   // Action to fetch analytics
   fetchAnalytics: async (forceRefresh = false) => {
     const store = get();
+    const { selectedRegion } = store;
     
     // Skip fetching if data was recently fetched, unless forceRefresh is true
     if (!forceRefresh && !store.shouldRefreshData()) {
@@ -120,19 +129,42 @@ export const useAnalyticsStore = create((set, get) => ({
     try {
       // Get reports count
       const reportsCollection = collection(db, 'reports');
-      const reportsSnapshot = await getCountFromServer(reportsCollection);
+      let reportsCountQuery = reportsCollection;
+      
+      // Apply region filter if selected
+      if (selectedRegion && selectedRegion !== 'all') {
+        reportsCountQuery = query(reportsCountQuery, where('region', '==', selectedRegion));
+      }
+      
+      const reportsSnapshot = await getCountFromServer(reportsCountQuery);
       const reportsCount = reportsSnapshot.data().count;
       
       // Get resolved reports count
-      const resolvedReportsQuery = query(
+      let resolvedReportsQuery = query(
         collection(db, 'reports'), 
         where('status', '==', 'resolved')
       );
+      
+      // Apply region filter if selected for resolved reports too
+      if (selectedRegion && selectedRegion !== 'all') {
+        resolvedReportsQuery = query(
+          resolvedReportsQuery, 
+          where('region', '==', selectedRegion)
+        );
+      }
+      
       const resolvedSnapshot = await getCountFromServer(resolvedReportsQuery);
       const resolvedCount = resolvedSnapshot.data().count;
       
       // Get all reports to calculate problem services and resolution time
-      const allReportsSnapshot = await getDocs(reportsCollection);
+      let reportsQuery = collection(db, 'reports');
+      
+      // Apply region filter if a specific region is selected
+      if (selectedRegion && selectedRegion !== 'all') {
+        reportsQuery = query(reportsQuery, where('region', '==', selectedRegion));
+      }
+      
+      const allReportsSnapshot = await getDocs(reportsQuery);
       
       // Calculate average resolution time
       let totalResolutionDays = 0;

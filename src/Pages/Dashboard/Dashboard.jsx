@@ -7,62 +7,6 @@ import ServiceTypeChart from '../../Components/Charts/ServiceTypeChart';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-// Функция для парсинга даты из разных форматов
-const parseDate = (dateString) => {
-  if (!dateString) return null;
-  
-  let parsedDate;
-  
-  // Проверяем формат даты "dd.MM.YYYY HH:mm"
-  if (dateString.includes('.')) {
-    const [datePart, timePart] = dateString.split(' ');
-    const [day, month, year] = datePart.split('.').map(num => parseInt(num, 10));
-    
-    if (timePart) {
-      const [hours, minutes] = timePart.split(':').map(num => parseInt(num, 10));
-      parsedDate = new Date(year, month - 1, day, hours, minutes);
-    } else {
-      parsedDate = new Date(year, month - 1, day);
-    }
-  } 
-  // Проверяем формат даты "dd-MM-YYYY" или "YYYY-MM-DD"
-  else if (dateString.includes('-')) {
-    // Проверяем, не является ли это ISO форматом (YYYY-MM-DD)
-    const parts = dateString.split('-');
-    if (parts.length === 3) {
-      // Если первая часть - год (4 цифры)
-      if (parts[0].length === 4) {
-        // ISO формат (YYYY-MM-DD)
-        const [year, month, day] = parts.map(num => parseInt(num, 10));
-        parsedDate = new Date(year, month - 1, day);
-      } else {
-        // Наш формат (DD-MM-YYYY)
-        const [day, month, year] = parts.map(num => parseInt(num, 10));
-        parsedDate = new Date(year, month - 1, day);
-      }
-    }
-  }
-  // Пробуем стандартный парсинг для ISO и других форматов
-  else {
-    parsedDate = new Date(dateString);
-    if (isNaN(parsedDate.getTime())) {
-      return null;
-    }
-  }
-  
-  // Проверяем валидность даты
-  if (!parsedDate || isNaN(parsedDate.getTime())) {
-    return null;
-  }
-  
-  return parsedDate;
-};
-
-// Функция для правильного склонения слова "день"
-const formatDays = (days, t) => {
-  return `${days} ${t('complaints.days')}`;
-};
-
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -78,6 +22,62 @@ const Dashboard = () => {
     error: analyticsError, 
     refreshData: refreshAnalytics 
   } = useFetchAnalytics();
+  
+  // Функция для парсинга даты из разных форматов
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+    
+    let parsedDate;
+    
+    // Проверяем формат даты "dd.MM.YYYY HH:mm"
+    if (dateString.includes('.')) {
+      const [datePart, timePart] = dateString.split(' ');
+      const [day, month, year] = datePart.split('.').map(num => parseInt(num, 10));
+      
+      if (timePart) {
+        const [hours, minutes] = timePart.split(':').map(num => parseInt(num, 10));
+        parsedDate = new Date(year, month - 1, day, hours, minutes);
+      } else {
+        parsedDate = new Date(year, month - 1, day);
+      }
+    } 
+    // Проверяем формат даты "dd-MM-YYYY" или "YYYY-MM-DD"
+    else if (dateString.includes('-')) {
+      // Проверяем, не является ли это ISO форматом (YYYY-MM-DD)
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        // Если первая часть - год (4 цифры)
+        if (parts[0].length === 4) {
+          // ISO формат (YYYY-MM-DD)
+          const [year, month, day] = parts.map(num => parseInt(num, 10));
+          parsedDate = new Date(year, month - 1, day);
+        } else {
+          // Наш формат (DD-MM-YYYY)
+          const [day, month, year] = parts.map(num => parseInt(num, 10));
+          parsedDate = new Date(year, month - 1, day);
+        }
+      }
+    }
+    // Пробуем стандартный парсинг для ISO и других форматов
+    else {
+      parsedDate = new Date(dateString);
+      if (isNaN(parsedDate.getTime())) {
+        return null;
+      }
+    }
+    
+    // Проверяем валидность даты
+    if (!parsedDate || isNaN(parsedDate.getTime())) {
+      return null;
+    }
+    
+    return parsedDate;
+  };
+  
+  // Функция для правильного склонения слова "день"
+  const formatDays = (days) => {
+    return `${days} ${t("complaints.days")}`;
+  };
   
   const {
     stats,
@@ -168,7 +168,7 @@ const Dashboard = () => {
           <div className="card-value">
             {loading ? t('dashboard.loading') : avgResolutionTime === 0 
               ? t('dashboard.noData') 
-              : formatDays(avgResolutionTime, t)
+              : formatDays(avgResolutionTime)
             }
           </div>
         </div>
@@ -224,7 +224,7 @@ const Dashboard = () => {
                     <td>#{complaint.id.substring(0, 5)}</td>
                     <td>{complaint.report_text?.substring(0, 40)}{complaint.report_text?.length > 40 ? '...' : ''}</td>
                     <td>{complaint.created_at}</td>
-                    <td className="days-overdue">{formatDays(daysPassed, t)}</td>
+                    <td className="days-overdue">{formatDays(daysPassed)}</td>
                     <td>{complaint.service}</td>
                     <td>
                       <button className="btn btn-sm btn-warning" onClick={() => navigate(`/complaints?id=${complaint.id}`)}>
