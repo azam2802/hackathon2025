@@ -39,6 +39,19 @@ async def format_report(report_data: Dict[str, Any], lang: str = "ru") -> str:
         date=report_data.get("created_at", datetime.now().strftime("%d.%m.%Y %H:%M")),
     )
 
+    # Add photo and solution fields for complaints
+    photo_field = ""
+    solution_field = ""
+    if report_data.get("type") == "Жалоба":
+        if report_data.get("photo_data"):
+            photo_field = get_text("report_photo_field", lang)
+        if report_data.get("solution"):
+            solution_field = get_text(
+                "report_solution_field",
+                lang,
+                solution=report_data.get("solution", "Не указано"),
+            )
+
     report_text = f"""
 {header}
 
@@ -49,6 +62,9 @@ async def format_report(report_data: Dict[str, Any], lang: str = "ru") -> str:
 {contact_field}
 
 {content_field}
+
+{photo_field}
+{solution_field}
 
 {date_field}
 """

@@ -2,6 +2,7 @@ import aiohttp
 import json
 import logging
 import hashlib
+import base64
 from typing import Dict, Any, Optional
 from config import BOT_TOKEN, API_BASE_URL, API_KEY
 
@@ -162,7 +163,7 @@ class APIClient:
             'report_type': report_data.get('type'),
             'region': report_data.get('region'),
             'city': report_data.get('city'),
-            'report_text': report_data.get('report_text'),  # Backend expects 'report_text'
+            'report_text': report_data.get('report_text'), 
             'contact_info': report_data.get('user_name'),
             'telegram_user_id': report_data.get('user_id'),
             'telegram_username': report_data.get('username', 'unknown'),
@@ -172,8 +173,22 @@ class APIClient:
             'location_source': location.get('source', 'city_selection'),
             'created_at': created_at,
             'submission_source': 'telegram_bot',
-            'language': report_data.get('language', 'ru')
+            'language': report_data.get('language', 'ru'),
+            'solution': report_data.get('solution')  # Add solution to payload
         }
+        
+        # Handle photo data if present
+        if 'photo_data' in report_data and report_data['photo_data']:
+            try:
+                # Convert bytes to base64 string
+                photo_data = report_data['photo_data']
+                if isinstance(photo_data, bytes):
+                    payload['photo_data'] = base64.b64encode(photo_data).decode('utf-8')
+                else:
+                    payload['photo_data'] = photo_data
+            except Exception as e:
+                logging.error(f"Error encoding photo data: {e}")
+                payload['photo_data'] = None
         
         return payload
     
