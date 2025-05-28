@@ -61,6 +61,60 @@ $gray-light: #eaeef6;
     }
   }
 
+  .mobile-menu-button {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 101;
+    
+    @media (max-width: 1000px) {
+      display: block;
+    }
+    
+    .burger-icon {
+      display: block;
+      position: relative;
+      width: 24px;
+      height: 2px;
+      background-color: $primary-color;
+      transition: all 0.3s ease;
+      
+      &:before,
+      &:after {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 2px;
+        background-color: $primary-color;
+        transition: all 0.3s ease;
+      }
+      
+      &:before {
+        top: -8px;
+      }
+      
+      &:after {
+        bottom: -8px;
+      }
+      
+      &.open {
+        background-color: transparent;
+        
+        &:before {
+          transform: rotate(45deg);
+          top: 0;
+        }
+        
+        &:after {
+          transform: rotate(-45deg);
+          bottom: 0;
+        }
+      }
+    }
+  }
+  
   .logo-block {
     display: flex;
     align-items: center;
@@ -97,6 +151,43 @@ $gray-light: #eaeef6;
     
     @media (max-width: 1000px) {
       display: none;
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 80%;
+      max-width: 300px;
+      height: 100vh;
+      background-color: white;
+      flex-direction: column;
+      padding: 80px 24px 24px;
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      
+      &.mobile-open {
+        display: flex;
+        right: 0;
+      }
+      
+      a {
+        width: 100%;
+        padding: 12px 0;
+        text-align: left;
+        border-bottom: 1px solid $gray-light;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+      
+      .login-link {
+        margin-top: 20px;
+        text-align: center;
+      }
+      
+      .language-switcher-landing {
+        margin-top: 20px;
+        width: 100%;
+      }
     }
 
     a {
