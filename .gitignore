@@ -31,7 +31,7 @@ dist-ssr
 *.pyc
 
 .cursorignore
-
+/venv
 tg_bot/reports/
 .env
 tg_bot/__pycache__
