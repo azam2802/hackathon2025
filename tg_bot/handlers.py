@@ -16,6 +16,8 @@ from keyboards import (
     get_confirmation_keyboard,
     get_language_keyboard,
     get_location_keyboard,
+    get_skip_location_keyboard,
+    get_skip_location_inline_keyboard,
 )
 from utils import (
     format_report,
@@ -158,14 +160,53 @@ async def process_report_type(callback: CallbackQuery, state: FSMContext):
     # Удаляем предыдущее сообщение
     await callback.message.delete()
 
-    # Отправляем новое сообщение с клавиатурой для геолокации
+    # Отправляем новое сообщение с инструкцией по отправке геолокации и кнопкой пропуска
     await callback.message.answer(
-        get_text("select_location_method", lang),
-        reply_markup=get_location_keyboard(lang),
+        get_text(
+            "select_location_on_map", lang
+        ),  # Текст с инструкцией и вариантом ручного выбора
+        reply_markup=get_skip_location_inline_keyboard(
+            lang
+        ),  # Inline-клавиатура только с "Пропустить"
         parse_mode="Markdown",
     )
 
     await state.set_state(ReportStates.waiting_for_location)
+
+
+@router.callback_query(
+    F.data == "skip_location_selection", ReportStates.waiting_for_location
+)
+async def skip_location_inline(callback: CallbackQuery, state: FSMContext):
+    """Handle location skip from inline keyboard"""
+    await callback.answer()
+
+    data = await state.get_data()
+    lang = get_user_language(data)
+
+    # Удаляем сообщение с кнопкой пропуска
+    await callback.message.delete()
+
+    await callback.message.answer(
+        get_text(
+            "location_skipped", lang
+        ),  # Можно использовать тот же текст или другой
+        reply_markup=ReplyKeyboardRemove(),  # Убираем Reply клавиатуру, если она была
+    )
+
+    # Показываем выбор региона
+    region = data.get(
+        "region"
+    )  # Здесь region еще None, нужно использовать тип обращения
+    localized_type = get_report_type_name(data.get("type"), lang)
+
+    await callback.message.answer(
+        get_text("select_region", lang, type=localized_type),
+        reply_markup=get_regions_keyboard(lang),
+        parse_mode="Markdown",
+    )
+
+    await state.set_state(ReportStates.waiting_for_region)
 
 
 @router.message(ReportStates.waiting_for_location, F.location)
@@ -238,43 +279,20 @@ async def process_location(message: Message, state: FSMContext):
     await state.update_data(location=location_data, region=region, city=city)
 
     await message.answer(
-        get_text("location_sent", lang), reply_markup=ReplyKeyboardRemove()
+        get_text("location_selected", lang), reply_markup=ReplyKeyboardRemove()
     )
 
     # Переходим к вводу текста обращения
     await message.answer(
         f"✅ Тип обращения: **{data.get('type')}**\n"
         f"✅ Регион: **{region}**\n"
-        f"✅ Населенный пункт: **{city}**\n\n"
+        f"✅ Населенный пункт: **{city}**\n"
+        f"✅ Адрес: **{address}**\n\n"
         f"Изложите суть обращения:",
         parse_mode="Markdown",
     )
 
     await state.set_state(ReportStates.waiting_for_report_text)
-
-
-@router.message(
-    ReportStates.waiting_for_location, F.text == get_text("skip_location", "ru")
-)
-async def skip_location(message: Message, state: FSMContext):
-    """Handle location skip"""
-    data = await state.get_data()
-    lang = get_user_language(data)
-
-    await message.answer(
-        get_text("location_skipped", lang), reply_markup=ReplyKeyboardRemove()
-    )
-
-    # Показываем выбор региона
-    await message.answer(
-        get_text(
-            "select_region", lang, type=get_report_type_name(data.get("type"), lang)
-        ),
-        reply_markup=get_regions_keyboard(lang),
-        parse_mode="Markdown",
-    )
-
-    await state.set_state(ReportStates.waiting_for_region)
 
 
 @router.callback_query(F.data == "back_to_main")
