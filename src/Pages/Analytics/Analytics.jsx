@@ -29,6 +29,8 @@ const Analytics = () => {
   const [selectedAgency, setSelectedAgency] = useState('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState('month');
   const [selectedRegion, setSelectedRegion] = useState('all');
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const parseReportDate = (dateString) => {
     if (!dateString) return new Date();
@@ -430,6 +432,118 @@ const Analytics = () => {
     return [centerLat, centerLng];
   }, [geoDistribution.markers]);
 
+  // Добавляем функцию для обработки клика по метке
+  const handleMarkerClick = (marker) => {
+    const report = filteredData.find(r => r.id === marker.id);
+    if (report) {
+      setSelectedReport(report);
+      setIsModalOpen(true);
+    }
+  };
+
+  // Компонент модального окна
+  const ReportModal = ({ report, onClose }) => {
+    if (!report) return null;
+
+    const getStatusChip = (status) => {
+      const statusConfig = {
+        pending: { text: 'В ожидании', color: '#ff9800', bgColor: '#fff3e0' },
+        resolved: { text: 'Решено', color: '#4caf50', bgColor: '#e8f5e9' },
+        cancelled: { text: 'Отменено', color: '#f44336', bgColor: '#ffebee' },
+        new: { text: 'Новое', color: '#2196f3', bgColor: '#e3f2fd' }
+      };
+      
+      const config = statusConfig[status] || statusConfig.new;
+      
+      return (
+        <span className="status-chip" style={{ 
+          color: config.color, 
+          backgroundColor: config.bgColor,
+          borderColor: config.color
+        }}>
+          {config.text}
+        </span>
+      );
+    };
+
+    const getPriorityChip = (priority) => {
+      const priorityConfig = {
+        critical: { text: 'Критическая', color: '#f44336', bgColor: '#ffebee' },
+        high: { text: 'Высокая', color: '#ff9800', bgColor: '#fff3e0' },
+        medium: { text: 'Средняя', color: '#2196f3', bgColor: '#e3f2fd' },
+        low: { text: 'Низкая', color: '#4caf50', bgColor: '#e8f5e9' }
+      };
+      
+      const config = priorityConfig[priority] || priorityConfig.medium;
+      
+      return (
+        <span className="priority-chip" style={{ 
+          color: config.color, 
+          backgroundColor: config.bgColor,
+          borderColor: config.color
+        }}>
+          {config.text}
+        </span>
+      );
+    };
+
+    return (
+      <div className="report-modal-container">
+        <div className="report-modal">
+          <button className="close-button" onClick={onClose}>×</button>
+          <h3>Детали жалобы</h3>
+          <div className="report-details">
+            <div className="detail-row">
+              <span className="detail-label">Статус:</span>
+              <span className="detail-value">
+                {getStatusChip(report.status)}
+              </span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Ведомство:</span>
+              <span className="detail-value">{report.agency}</span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Регион:</span>
+              <span className="detail-value">{report.region}</span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Услуга:</span>
+              <span className="detail-value">{report.service}</span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Важность:</span>
+              <span className="detail-value">
+                {getPriorityChip(report.importance)}
+              </span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Дата создания:</span>
+              <span className="detail-value">{report.created_at}</span>
+            </div>
+            
+            {report.resolved_at && (
+              <div className="detail-row">
+                <span className="detail-label">Дата решения:</span>
+                <span className="detail-value">{report.resolved_at}</span>
+              </div>
+            )}
+            
+            <div className="report-text">
+              <div className="detail-label">Описание:</div>
+              <div className="detail-value">{report.report_text}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="analytics-page">
       <div className="page-title">
@@ -618,25 +732,37 @@ const Analytics = () => {
             <div className="geo-container">
               <div className="map-container">
                 {geoDistribution.markers.length > 0 ? (
-                  <Map 
-                    height={400}
-                    center={mapCenter}
-                    defaultZoom={7}
-                  >
-                    <ZoomControl />
-                    {geoDistribution.markers.map(marker => (
-                      <Marker
-                        key={marker.id}
-                        width={30}
-                        anchor={[marker.lat, marker.lng]}
-                        color={
-                          marker.status === 'resolved' ? '#4caf50' :
-                          marker.status === 'cancelled' ? '#f44336' :
-                          '#2196f3'
-                        }
+                  <>
+                    <Map 
+                      height={400}
+                      center={mapCenter}
+                      defaultZoom={7}
+                    >
+                      <ZoomControl />
+                      {geoDistribution.markers.map(marker => (
+                        <Marker
+                          key={marker.id}
+                          width={30}
+                          anchor={[marker.lat, marker.lng]}
+                          color={
+                            marker.status === 'resolved' ? '#4caf50' :
+                            marker.status === 'cancelled' ? '#f44336' :
+                            '#2196f3'
+                          }
+                          onClick={() => handleMarkerClick(marker)}
+                        />
+                      ))}
+                    </Map>
+                    {isModalOpen && selectedReport && (
+                      <ReportModal 
+                        report={selectedReport} 
+                        onClose={() => {
+                          setIsModalOpen(false);
+                          setSelectedReport(null);
+                        }} 
                       />
-                    ))}
-                  </Map>
+                    )}
+                  </>
                 ) : (
                   <div className="no-data-message">{t('analytics.noGeoData')}</div>
                 )}
