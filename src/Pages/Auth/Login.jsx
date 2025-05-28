@@ -4,6 +4,7 @@ import { signInUser } from '../../firebase/auth';
 import './Login.scss';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../../Components/LanguageSwitcher/LanguageSwitcher';
+import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesBackground';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -106,6 +107,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+      <ParticlesBackground className="fixed-particles" />
     </div>
   );
 };

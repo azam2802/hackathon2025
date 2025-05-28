@@ -287,7 +287,7 @@ const Dashboard = () => {
                     <td className="days-overdue">{formatDays(daysPassed)}</td>
                     <td>{complaint.service}</td>
                     <td>
-                      <button className="btn btn-sm btn-warning" onClick={() => navigate(`ints?id=${complaint.id}`)}>
+                      <button className="btn btn-sm btn-warning" onClick={() => navigate(`/admin/complaints?id=${complaint.id}`)}>
                         {t('dashboard.process')}
                       </button>
                     </td>

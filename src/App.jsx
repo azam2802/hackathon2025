@@ -17,13 +17,13 @@ function App() {
       <Routes>
         <Route path="/login" element={
           <div className="auth-only-layout">
-            <ParticlesBackground />
+            <ParticlesBackground className="fixed-particles" />
             <Login />
           </div>
         } />
         <Route path="/register" element={
           <div className="auth-only-layout">
-            <ParticlesBackground />
+            <ParticlesBackground className="fixed-particles" />
             <Register />
           </div>
         } />

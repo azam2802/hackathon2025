@@ -1,13 +1,49 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import './Landing.scss';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../../Components/LanguageSwitcher/LanguageSwitcher';
 import PhoneDemo from '../../Assets/landing-demo.png';
 import KgEmblem from '../../Assets/emblem.png';
+import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesBackground';
 import { Link } from 'react-router-dom';
 
 const Landing = () => {
   const { t } = useTranslation();
+  const phoneRef = useRef(null);
+  const [tiltStyle, setTiltStyle] = useState({});
+
+  // Handle mouse move for tilt effect
+  const handleMouseMove = (e) => {
+    if (!phoneRef.current) return;
+    
+    const mockup = phoneRef.current;
+    const mockupRect = mockup.getBoundingClientRect();
+    
+    // Calculate the mouse position relative to the center of the element
+    const centerX = mockupRect.left + mockupRect.width / 2;
+    const centerY = mockupRect.top + mockupRect.height / 2;
+    
+    // Calculate how far the mouse is from the center (as a percentage of the element's dimensions)
+    const percentX = (e.clientX - centerX) / (mockupRect.width / 2);
+    const percentY = (e.clientY - centerY) / (mockupRect.height / 2);
+    
+    // Apply the tilt effect (limited to 10 degrees max)
+    const tiltX = -percentY * 10; // Inverse Y for natural tilt
+    const tiltY = percentX * 10;
+    
+    setTiltStyle({
+      transform: `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+      transition: 'transform 0.1s ease-out'
+    });
+  };
+
+  // Reset tilt when mouse leaves
+  const handleMouseLeave = () => {
+    setTiltStyle({
+      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
+      transition: 'transform 0.5s ease-out'
+    });
+  };
 
   return (
     <div className="landing-root">
@@ -38,6 +74,9 @@ const Landing = () => {
       </div>
 
       <section className="landing-hero">
+        <div className="hero-particles">
+          <ParticlesBackground color="#2d50a6" quantity={40} />
+        </div>
         <div className="hero-container">
           <div className="hero-left">
             <div className="official-badge">
@@ -77,7 +116,13 @@ const Landing = () => {
             </div>
           </div>
           <div className="hero-right">
-            <div className="phone-mockup">
+            <div 
+              className="phone-mockup" 
+              ref={phoneRef}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+              style={tiltStyle}
+            >
               <img src={PhoneDemo} alt={t('landing.heroTitle')} className="hero-illustration" />
               <div className="mockup-overlay"></div>
             </div>

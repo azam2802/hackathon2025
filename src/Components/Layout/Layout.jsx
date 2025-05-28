@@ -39,7 +39,7 @@ const Layout = () => {
   if (loading) {
     return (
       <div className="app-layout">
-        <ParticlesBackground />
+        <ParticlesBackground className="fixed-particles" />
         <div className="loading-screen">
           <div className="loading-spinner">Loading...</div>
         </div>
@@ -52,7 +52,7 @@ const Layout = () => {
     console.log('User is pending approval:', user);
     return (
       <div className="app-layout auth-only-layout">
-        <ParticlesBackground />
+        <ParticlesBackground className="fixed-particles" />
         
         <div className="auth-container">
           <div className="auth-header">
@@ -88,7 +88,7 @@ const Layout = () => {
   // Only show main layout for authenticated users
   return (
     <div className="app-layout">
-      <ParticlesBackground />
+      <ParticlesBackground className="fixed-particles" />
       <div className="sidebar">
         <div className="sidebar-logo">
           <img src="/logo-gov.svg" alt="Public Pulse" />

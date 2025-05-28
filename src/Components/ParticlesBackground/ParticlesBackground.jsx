@@ -3,7 +3,7 @@ import { loadSlim } from "tsparticles-slim";
 import Particles from "react-particles";
 import './ParticlesBackground.scss';
 
-const ParticlesBackground = () => {
+const ParticlesBackground = ({ className, color = "#3a36e0", quantity = 50 }) => {
   const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
   }, []);
@@ -11,16 +11,16 @@ const ParticlesBackground = () => {
   return (
     <Particles
       id="tsparticles"
-      className="particles-container"
+      className={`particles-container ${className || ''}`}
       init={particlesInit}
       options={{
         fpsLimit: 120,
         particles: {
           color: {
-            value: "#3a36e0",
+            value: color,
           },
           links: {
-            color: "#3a36e0",
+            color: color,
             distance: 150,
             enable: true,
             opacity: 0.4,
@@ -33,7 +33,7 @@ const ParticlesBackground = () => {
               default: "bounce",
             },
             random: false,
-            speed: 2,
+            speed: 1.5,
             straight: false,
           },
           number: {
@@ -41,7 +41,7 @@ const ParticlesBackground = () => {
               enable: true,
               area: 800,
             },
-            value: 50,
+            value: quantity,
           },
           opacity: {
             value: 0.3,
