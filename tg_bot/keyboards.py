@@ -178,3 +178,33 @@ def get_skip_location_inline_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
     builder.adjust(1)  # По одной кнопке в ряду
 
     return builder.as_markup()
+
+
+def get_skip_address_keyboard(lang: str = "ru") -> ReplyKeyboardMarkup:
+    """Создает клавиатуру только с кнопкой пропуска ввода адреса"""
+    builder = ReplyKeyboardBuilder()
+
+    # Добавляем кнопку пропуска
+    builder.button(text=get_text("skip_address", lang))
+
+    # Настраиваем клавиатуру
+    builder.adjust(1)  # По одной кнопке в ряду
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_skip_address_inline_keyboard(lang: str = "ru") -> InlineKeyboardMarkup:
+    """Создает Inline-клавиатуру только с кнопкой пропуска ввода адреса"""
+    builder = InlineKeyboardBuilder()
+
+    # Добавляем кнопку пропуска
+    builder.add(
+        InlineKeyboardButton(
+            text=get_text("skip_address", lang),
+            callback_data="skip_address_input",  # Уникальный callback_data
+        )
+    )
+
+    builder.adjust(1)  # По одной кнопке в ряду
+
+    return builder.as_markup()

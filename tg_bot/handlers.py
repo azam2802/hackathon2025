@@ -15,9 +15,10 @@ from keyboards import (
     get_cities_keyboard,
     get_confirmation_keyboard,
     get_language_keyboard,
-    get_location_keyboard,
     get_skip_location_keyboard,
     get_skip_location_inline_keyboard,
+    get_skip_address_keyboard,
+    get_skip_address_inline_keyboard,
 )
 from utils import (
     format_report,
@@ -373,26 +374,25 @@ async def process_city(callback: CallbackQuery, state: FSMContext):
 
     city = callback.data.split(":", 1)[1]
 
-    # Get coordinates for the selected city
-    city_location = get_city_coordinates(city)
-
-    await state.update_data(
-        city=city, location=city_location  # Automatically set location based on city
-    )
+    # Сохраняем выбранный город
+    await state.update_data(city=city)
 
     data = await state.get_data()
+    lang = get_user_language(data)
 
-    location_info = ""
+    # Удаляем сообщение с выбором города
+    await callback.message.delete()
 
-    await callback.message.edit_text(
-        f"✅ Тип обращения: **{data.get('type')}**\n"
-        f"✅ Регион: **{data.get('region')}**\n"
-        f"✅ Населенный пункт: **{city}**{location_info}\n\n"
-        f"Изложите суть обращения:",
+    # Просим ввести адрес или пропустить с Inline-кнопкой
+    await callback.message.answer(
+        get_text("request_address", lang, city=city),
+        reply_markup=get_skip_address_inline_keyboard(
+            lang
+        ),  # Используем новую Inline-клавиатуру
         parse_mode="Markdown",
     )
 
-    await state.set_state(ReportStates.waiting_for_report_text)
+    await state.set_state(ReportStates.waiting_for_address)
 
 
 @router.message(ReportStates.waiting_for_report_text)
@@ -651,6 +651,80 @@ async def process_region(callback: CallbackQuery, state: FSMContext):
     )
 
     await state.set_state(ReportStates.waiting_for_city)
+
+
+@router.message(ReportStates.waiting_for_address, F.text)
+async def process_address(message: Message, state: FSMContext):
+    """Process address input"""
+    data = await state.get_data()
+    lang = get_user_language(data)
+
+    address = message.text
+    city = data.get("city")
+
+    # Пытаемся получить координаты по введенному адресу
+    location_data = get_city_coordinates(f"{address}, {city}")
+
+    # Если Google Maps не дал координаты, используем координаты города
+    if not location_data or location_data.get("source") != "google_maps":
+        location_data = get_city_coordinates(city)
+
+    await state.update_data(
+        address=address,  # Сохраняем введенный адрес
+        location=location_data,  # Сохраняем полученные координаты
+    )
+
+    await message.answer(
+        get_text("address_received", lang), reply_markup=ReplyKeyboardRemove()
+    )
+
+    # Переходим к вводу текста обращения
+    await message.answer(
+        f"✅ Тип обращения: **{data.get('type')}**\n"
+        f"✅ Регион: **{data.get('region')}**\n"
+        f"✅ Населенный пункт: **{city}**\n"
+        f"✅ Адрес: **{address}**\n"
+        f"Изложите суть обращения:",
+        parse_mode="Markdown",
+    )
+
+    await state.set_state(ReportStates.waiting_for_report_text)
+
+
+@router.callback_query(F.data == "skip_address_input", ReportStates.waiting_for_address)
+async def skip_address_inline(callback: CallbackQuery, state: FSMContext):
+    """Handle skip address input from inline keyboard"""
+    await callback.answer()
+
+    data = await state.get_data()
+    lang = get_user_language(data)
+    city = data.get("city")
+
+    # Удаляем сообщение с кнопкой пропуска
+    await callback.message.delete()
+
+    # Используем координаты города, если адрес пропущен
+    location_data = get_city_coordinates(city)
+    await state.update_data(
+        address="Не указан",  # Сохраняем, что адрес не указан
+        location=location_data,  # Сохраняем координаты города
+    )
+
+    await callback.message.answer(
+        get_text("address_skipped", lang),  # Можно использовать тот же текст или другой
+        reply_markup=ReplyKeyboardRemove(),  # Убираем Reply клавиатуру, если она была
+    )
+
+    # Переходим к вводу текста обращения
+    await callback.message.answer(
+        f"✅ Тип обращения: **{data.get('type')}**\n"
+        f"✅ Регион: **{data.get('region')}**\n"
+        f"✅ Населенный пункт: **{city}**\n"
+        f"Изложите суть обращения:",
+        parse_mode="Markdown",
+    )
+
+    await state.set_state(ReportStates.waiting_for_report_text)
 
 
 # Handle any other messages during states
