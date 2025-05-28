@@ -113,29 +113,82 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
           updateData.resolved_at = `${day}.${month}.${year} ${hours}:${minutes}`;
         }
         
-        // Отправляем уведомление пользователю через Telegram бота
-        if (formData.status === 'resolved' || formData.status === 'cancelled') {
-          try {
-            const response = await fetch('http://localhost:8080/api/notify-status-update', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                report_id: complaint.id,
-                content: complaint.report_text,
-                status: formData.status,
-                notes: formData.notes || '',
-                telegram_user_id: complaint.telegram_user_id,
-                language: complaint.language || 'ru'
-              }),
-            });
-            
-            if (!response.ok) {
-              console.error('Failed to send Telegram notification:', await response.text());
+        // Отправляем уведомления пользователю
+        if (formData.status === 'resolved' || formData.status === 'cancelled' || formData.status === 'pending') {
+          // Отправляем уведомление через Telegram бота для telegram пользователей
+          if (complaint.telegram_user_id) {
+            try {
+              const response = await fetch('http://localhost:8080/api/notify-status-update', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  report_id: complaint.id,
+                  content: complaint.report_text,
+                  status: formData.status,
+                  notes: formData.notes || '',
+                  telegram_user_id: complaint.telegram_user_id,
+                  language: complaint.language || 'ru'
+                }),
+              });
+              
+              if (!response.ok) {
+                console.error('Failed to send Telegram notification:', await response.text());
+              }
+            } catch (error) {
+              console.error('Error sending Telegram notification:', error);
             }
-          } catch (error) {
-            console.error('Error sending Telegram notification:', error);
+          }
+          
+          // Отправляем уведомление по email для website submissions
+          if (complaint.submission_source === 'website') {
+            try {
+              const response = await fetch('http://localhost:8000/api/send-status-email/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  complaint_id: complaint.id,
+                  status: formData.status,
+                  notes: formData.notes || '',
+                  language: complaint.language || 'ru'
+                }),
+              });
+              
+              if (!response.ok) {
+                console.error('Failed to send email notification:', await response.text());
+              } else {
+                console.log('Email notification sent successfully');
+              }
+            } catch (error) {
+              console.error('Error sending email notification:', error);
+            }
+            
+            // Уведомляем Django admin о изменении статуса через webhook
+            try {
+              const webhookResponse = await fetch('http://localhost:8000/api/firestore-webhook/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  document_id: complaint.id,
+                  action: 'update',
+                  data: { ...complaint, status: formData.status, notes: formData.notes },
+                  old_data: { status: complaint.status }
+                }),
+              });
+              
+              if (!webhookResponse.ok) {
+                console.error('Failed to notify Django admin webhook:', await webhookResponse.text());
+              } else {
+                console.log('Django admin webhook notified successfully');
+              }
+            } catch (error) {
+              console.error('Error calling Django admin webhook:', error);
+            }
           }
         }
       }
