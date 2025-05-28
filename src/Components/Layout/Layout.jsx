@@ -5,14 +5,15 @@ import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
 import { useAuth } from '../../hooks/useAuth'
 import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
-import { Assignment, Search, BarChart, Analytics, Logout } from '@mui/icons-material'
-import { IconDashboard } from '@tabler/icons-react';
-
+import { Assignment, Search, BarChart, Analytics, Logout, Speed } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher'
 
 const Layout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -56,8 +57,8 @@ const Layout = () => {
         <div className="auth-container">
           <div className="auth-header">
             <div className="logo">
-              <img src="/logo-gov.svg" alt="ГосАналитика" />
-              <span>ГосАналитика</span>
+              <img src="/logo-gov.svg" alt="Public Pulse" />
+              <span>Public Pulse</span>
             </div>
             <h1>Ожидание одобрения</h1>
             <p>Ваш аккаунт находится на рассмотрении</p>
@@ -74,7 +75,7 @@ const Layout = () => {
               <p className="status-note">Ваш запрос находится на рассмотрении.</p>
               <div className="pending-actions">
                 <button onClick={handleLogout} className="logout-btn">
-                  Выйти из аккаунта
+                  {t('navigation.logout')}
                 </button>
               </div>
             </div>
@@ -90,29 +91,29 @@ const Layout = () => {
       <ParticlesBackground />
       <div className="sidebar">
         <div className="sidebar-logo">
-          <img src="/logo-gov.svg" alt="ГосАналитика" />
-          <span>ГосАналитика</span>
+          <img src="/logo-gov.svg" alt="Public Pulse" />
+          <span>Public Pulse</span>
         </div>
         <nav className="sidebar-nav">
           <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
-            <IconDashboard className="sidebar-icon" />
-            <span>Дашборд</span>
+            <Speed className="sidebar-icon" />
+            <span>{t('navigation.dashboard')}</span>
           </NavLink>
           <NavLink to="/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
             <Assignment className="sidebar-icon" />
-            <span>Обращения</span>
+            <span>{t('navigation.complaints')}</span>
           </NavLink>
           <NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>
             <Search className="sidebar-icon" />
-            <span>Услуги</span>
+            <span>{t('navigation.services')}</span>
           </NavLink>
           <NavLink to="/reports" className={({ isActive }) => isActive ? 'active' : ''}>
             <BarChart className="sidebar-icon" />
-            <span>Отчеты</span>
+            <span>{t('navigation.reports')}</span>
           </NavLink>
           <NavLink to="/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
             <Analytics className="sidebar-icon" />
-            <span>Аналитика</span>
+            <span>{t('navigation.analytics')}</span>
           </NavLink>
         </nav>
         <div className="sidebar-footer">
@@ -125,9 +126,12 @@ const Layout = () => {
               Админ панель
             </button>
           )}
+          <div className="language-switcher sidebar-language">
+            <LanguageSwitcher />
+          </div>
           <button onClick={handleLogout} className="logout-button">
             <Logout className="sidebar-icon" />
-            <span>Выход</span>
+            <span>{t('navigation.logout')}</span>
           </button>
         </div>
       </div>
@@ -139,7 +143,7 @@ const Layout = () => {
         </main>
         <footer className="footer">
           <div className="container">
-            <p>&copy; {new Date().getFullYear()} - ГосАналитика | Система анализа эффективности государственных услуг</p>
+            <p>&copy; {new Date().getFullYear()} - {t('app.title')}</p>
           </div>
         </footer>
       </div>

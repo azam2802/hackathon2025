@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInUser } from '../../firebase/auth';
 import './Login.scss';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../../Components/LanguageSwitcher/LanguageSwitcher';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +13,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleChange = (e) => {
     setFormData({
@@ -39,29 +42,32 @@ const Login = () => {
       <div className="auth-container">
         <div className="auth-header">
           <div className="logo">
-            <img src="/logo-gov.svg" alt="ГосАналитика" />
-            <span>ГосАналитика</span>
+            <img src="/logo-gov.svg" alt={t('app.title')} />
+            <span>Public Pulse</span>
           </div>
-          <h1>Вход в систему</h1>
-          <p>Авторизуйтесь для доступа к системе</p>
+          <h1>{t('auth.login')}</h1>
+          <p>{t('auth.loginDescription')}</p>
           <Link to="/landing" className="landing-link">
-            Узнать больше о системе
+            {t('auth.learnMore')}
           </Link>
+          <div className="language-switcher auth-header-language">
+            <LanguageSwitcher />
+          </div>
         </div>
         
         <div className="auth-content">
           <div className="auth-form">
-            <h2>Вход</h2>
+            <h2>{t('auth.login')}</h2>
             
             <div className="superadmin-info">
-              <p><strong>Superadmin credentials:</strong></p>
+              <p><strong>{t('auth.superadminCredentials')}:</strong></p>
               <p>Email: superadmin@gov.kg</p>
               <p>Password: SuperAdmin123!</p>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">{t('auth.email')}</label>
                 <input
                   type="email"
                   id="email"
@@ -73,7 +79,7 @@ const Login = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">{t('auth.password')}</label>
                 <input
                   type="password"
                   id="password"
@@ -87,14 +93,14 @@ const Login = () => {
               {error && <div className="error-message">{error}</div>}
 
               <button type="submit" disabled={loading}>
-                {loading ? 'Вход...' : 'Войти'}
+                {loading ? t('auth.loggingIn') : t('auth.login')}
               </button>
             </form>
 
             <p>
-              Нет аккаунта?{' '}
+              {t('auth.dontHaveAccount')}{' '}
               <Link to="/register" className="link-button">
-                Зарегистрируйтесь
+                {t('auth.register')}
               </Link>
             </p>
           </div>

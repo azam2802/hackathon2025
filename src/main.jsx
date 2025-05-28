@@ -5,6 +5,9 @@ import App from './App.jsx'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
+// Import i18n configuration
+import './i18n/i18n.js'
+
 // Инициализация AOS
 AOS.init({
   duration: 800,

@@ -31,29 +31,34 @@
   .landing-nav {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 20px;
+
     a {
-      color: #36363c;
       text-decoration: none;
+      color: #333;
       font-weight: 500;
-      font-size: 1rem;
-      transition: color 0.2s;
+      transition: all 0.2s;
+
       &:hover {
-        color: #3a36e0;
+        color: var(--primary-color);
       }
     }
+
     .login-link {
-      background: #fff;
-      border: 1.5px solid #3a36e0;
-      color: #3a36e0;
-      border-radius: 6px;
-      padding: 4px 16px;
-      font-weight: 600;
-      transition: all 0.2s;
+      padding: 8px 16px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 4px;
+      font-weight: 500;
+
       &:hover {
-        background: #3a36e0;
-        color: #fff;
+        background-color: var(--primary-dark);
+        color: white;
       }
+    }
+    
+    .language-switcher-landing {
+      margin-left: 15px;
     }
   }
 }

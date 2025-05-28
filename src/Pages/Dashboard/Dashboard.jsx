@@ -5,6 +5,7 @@ import { useFetchComplaints } from '../../Hooks/useFetchComplaints';
 import AgencyChart from '../../Components/Charts/AgencyChart';
 import ServiceTypeChart from '../../Components/Charts/ServiceTypeChart';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Функция для парсинга даты из разных форматов
 const parseDate = (dateString) => {
@@ -58,26 +59,12 @@ const parseDate = (dateString) => {
 };
 
 // Функция для правильного склонения слова "день"
-const formatDays = (days) => {
-  const lastDigit = days % 10;
-  const lastTwoDigits = days % 100;
-  
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-    return `${days} дней`;
-  }
-  
-  if (lastDigit === 1) {
-    return `${days} день`;
-  }
-  
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return `${days} дня`;
-  }
-  
-  return `${days} дней`;
+const formatDays = (days, t) => {
+  return `${days} ${t('complaints.days')}`;
 };
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { 
     reportsCount, 
@@ -115,16 +102,16 @@ const Dashboard = () => {
   return (
     <div className="dashboard-page fade-in">
       <div className="page-title" data-aos="fade-down">
-        <h1>Дашборд анализа обращений граждан</h1>
+        <h1>{t('dashboard.title')}</h1>
         <div className="actions">
-          <button className="btn btn-primary">Сформировать отчет</button>
-          <button className="btn btn-outline">Экспорт данных</button>
+          <button className="btn btn-primary">{t('dashboard.generateReport')}</button>
+          <button className="btn btn-outline">{t('dashboard.exportData')}</button>
           <button 
             className="btn btn-refresh" 
             onClick={refreshData} 
             disabled={loading}
           >
-            {loading ? 'Обновление...' : 'Обновить данные'}
+            {loading ? t('dashboard.updating') : t('dashboard.refreshData')}
           </button>
         </div>
       </div>
@@ -132,28 +119,28 @@ const Dashboard = () => {
       <div className="filters-bar" data-aos="fade-up" data-aos-delay="100">
         <div className="search-input">
           <span className="search-icon">🔍</span>
-          <input type="text" placeholder="Поиск по услугам и обращениям..." />
+          <input type="text" placeholder={t('dashboard.searchPlaceholder')} />
         </div>
         
         <div className="filter-controls">
           <div className="filter-dropdown">
             <select defaultValue="">
-              <option value="" disabled>Период</option>
-              <option value="7d">Последние 7 дней</option>
-              <option value="30d">Последние 30 дней</option>
-              <option value="90d">Последние 90 дней</option>
-              <option value="1y">Год</option>
+              <option value="" disabled>{t('dashboard.period')}</option>
+              <option value="7d">{t('dashboard.last7Days')}</option>
+              <option value="30d">{t('dashboard.last30Days')}</option>
+              <option value="90d">{t('dashboard.last90Days')}</option>
+              <option value="1y">{t('dashboard.year')}</option>
             </select>
           </div>
           
           <div className="filter-dropdown">
             <select defaultValue="">
-              <option value="" disabled>Регион</option>
-              <option value="all">Все регионы</option>
-              <option value="msk">Москва</option>
-              <option value="spb">Санкт-Петербург</option>
-              <option value="nsk">Новосибирск</option>
-              <option value="ekb">Екатеринбург</option>
+              <option value="" disabled>{t('dashboard.region')}</option>
+              <option value="all">{t('dashboard.allRegions')}</option>
+              <option value="msk">{t('dashboard.moscow')}</option>
+              <option value="spb">{t('dashboard.saintPetersburg')}</option>
+              <option value="nsk">{t('dashboard.novosibirsk')}</option>
+              <option value="ekb">{t('dashboard.ekaterinburg')}</option>
             </select>
           </div>
         </div>
@@ -161,63 +148,63 @@ const Dashboard = () => {
       
       {error && (
         <div className="error-message" data-aos="fade-in">
-          Ошибка при загрузке данных: {error}
+          {t('dashboard.loadError')}: {error}
         </div>
       )}
       
       <div className="dashboard-cards">
         <div className="card" data-aos="zoom-in" data-aos-delay="200">
-          <div className="card-title">Всего обращений</div>
-          <div className="card-value">{loading ? 'Загрузка...' : reportsCount.toLocaleString()}</div>
+          <div className="card-title">{t('dashboard.totalComplaints')}</div>
+          <div className="card-value">{loading ? t('dashboard.loading') : reportsCount.toLocaleString()}</div>
         </div>
         
         <div className="card" data-aos="zoom-in" data-aos-delay="300">
-          <div className="card-title">Решенные обращения</div>
-          <div className="card-value">{loading ? 'Загрузка...' : resolvedCount.toLocaleString()}</div>
+          <div className="card-title">{t('dashboard.resolvedComplaints')}</div>
+          <div className="card-value">{loading ? t('dashboard.loading') : resolvedCount.toLocaleString()}</div>
         </div>
         
         <div className="card" data-aos="zoom-in" data-aos-delay="400">
-          <div className="card-title">Среднее время решения</div>
+          <div className="card-title">{t('dashboard.averageResolutionTime')}</div>
           <div className="card-value">
-            {loading ? 'Загрузка...' : avgResolutionTime === 0 
-              ? 'Нет данных' 
-              : formatDays(avgResolutionTime)
+            {loading ? t('dashboard.loading') : avgResolutionTime === 0 
+              ? t('dashboard.noData') 
+              : formatDays(avgResolutionTime, t)
             }
           </div>
         </div>
         
         <div className="card overdue-card" data-aos="zoom-in" data-aos-delay="500" onClick={() => navigateToComplaints('overdue')}>
-          <div className="card-title">Просроченные обращения</div>
+          <div className="card-title">{t('dashboard.overdueComplaints')}</div>
           <div className="card-value">
-            {loading ? 'Загрузка...' : (
+            {loading ? t('dashboard.loading') : (
               <span className={stats.overdue > 0 ? 'alert-value' : ''}>{stats.overdue}</span>
             )}
           </div>
-          {stats.overdue > 0 && <div className="card-badge">Требует внимания</div>}
+          {stats.overdue > 0 && <div className="card-badge">{t('dashboard.requiresAttention')}</div>}
         </div>
         
         <div className="card problem-card" data-aos="zoom-in" data-aos-delay="600">
-          <div className="card-title">Проблемные услуги</div>
-          <div className="card-value">{loading ? 'Загрузка...' : problemServices}</div>
+          <div className="card-title">{t('dashboard.problemServices')}</div>
+          <div className="card-value">{loading ? t('dashboard.loading') : problemServices}</div>
         </div>
       </div>
       
       {stats.overdue > 0 && (
         <div className="dashboard-section" data-aos="fade-up" data-aos-delay="300">
-          <h2 className="section-title">Просроченные обращения</h2>
+          <h2 className="section-title">{t('dashboard.overdueComplaints')}</h2>
           <div className="section-subtitle">
-            Обращения, которые находятся в обработке более месяца
+            {t('dashboard.overdueDescription')}
           </div>
           
           <table className="data-table alert-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Обращение</th>
-                <th>Дата создания</th>
-                <th>Срок</th>
-                <th>Услуга</th>
-                <th>Действия</th>
+                <th>{t('complaints.complaint')}</th>
+                <th>{t('dashboard.creationDate')}</th>
+                <th>{t('dashboard.timeframe')}</th>
+                <th>{t('complaints.service')}</th>
+                <th>{t('complaints.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -237,11 +224,11 @@ const Dashboard = () => {
                     <td>#{complaint.id.substring(0, 5)}</td>
                     <td>{complaint.report_text?.substring(0, 40)}{complaint.report_text?.length > 40 ? '...' : ''}</td>
                     <td>{complaint.created_at}</td>
-                    <td className="days-overdue">{formatDays(daysPassed)}</td>
+                    <td className="days-overdue">{formatDays(daysPassed, t)}</td>
                     <td>{complaint.service}</td>
                     <td>
                       <button className="btn btn-sm btn-warning" onClick={() => navigate(`/complaints?id=${complaint.id}`)}>
-                        Обработать
+                        {t('dashboard.process')}
                       </button>
                     </td>
                   </tr>
@@ -256,7 +243,7 @@ const Dashboard = () => {
                 className="btn btn-outline" 
                 onClick={() => navigateToComplaints('overdue')}
               >
-                Показать все ({stats.overdue})
+                {t('dashboard.showAll')} ({stats.overdue})
               </button>
             </div>
           )}
@@ -266,36 +253,36 @@ const Dashboard = () => {
       <div className="charts-container">
         <div className="chart-card" data-aos="fade-right" data-aos-delay="300">
           <div className="chart-title">
-            <span>Динамика обращений по ведомствам</span>
+            <span>{t('dashboard.complaintsByAgency')}</span>
           </div>
           <AgencyChart monthlyReports={monthlyReports} loading={loading} />
         </div>
         
         <div className="chart-card" data-aos="fade-left" data-aos-delay="400">
           <div className="chart-title">
-            <span>Распределение по типам услуг</span>
+            <span>{t('dashboard.serviceTypeDistribution')}</span>
           </div>
           <ServiceTypeChart serviceTypeDistribution={serviceTypeDistribution} loading={loading} />
         </div>
       </div>
       
       <div className="dashboard-section" data-aos="fade-up" data-aos-delay="500">
-        <h2 className="section-title">Проблемные услуги</h2>
+        <h2 className="section-title">{t('dashboard.problemServices')}</h2>
         <div className="section-subtitle">
-          Услуги с более чем 30 обращениями, отсортированные по убыванию
+          {t('dashboard.problemServicesDescription')}
         </div>
         
         {loading ? (
-          <div className="loading-indicator">Загрузка данных...</div>
+          <div className="loading-indicator">{t('dashboard.loading')}</div>
         ) : problemServicesList && problemServicesList.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
-                <th>Название услуги</th>
-                <th>Ведомство</th>
-                <th>Количество обращений</th>
-                <th>Статус</th>
-                <th>Действия</th>
+                <th>{t('dashboard.serviceName')}</th>
+                <th>{t('dashboard.agency')}</th>
+                <th>{t('dashboard.complaintsCount')}</th>
+                <th>{t('dashboard.status')}</th>
+                <th>{t('dashboard.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -306,16 +293,16 @@ const Dashboard = () => {
                   <td>{item.count}</td>
                   <td>
                     <span className={`status ${item.count > 100 ? 'critical' : item.count > 50 ? 'warning' : 'normal'}`}>
-                      {item.count > 100 ? 'Критический' : item.count > 50 ? 'Требует внимания' : 'Нормальный'}
+                      {item.count > 100 ? t('dashboard.critical') : item.count > 50 ? t('dashboard.requiresAttention') : t('dashboard.normal')}
                     </span>
                   </td>
-                  <td><button className="btn btn-sm">Детали</button></td>
+                  <td><button className="btn btn-sm">{t('dashboard.details')}</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <div className="no-data-message">Нет проблемных услуг для отображения</div>
+          <div className="no-data-message">{t('dashboard.noProblemServices')}</div>
         )}
       </div>
     </div>
