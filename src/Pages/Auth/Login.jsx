@@ -39,8 +39,8 @@ const Login = () => {
       <div className="auth-container">
         <div className="auth-header">
           <div className="logo">
-            <img src="/logo-gov.svg" alt="ГосАналитика" />
-            <span>ГосАналитика</span>
+            <img src="/logo-gov.svg" alt="PublicPulse" />
+            <span>PublicPulse</span>
           </div>
           <h1>Вход в систему</h1>
           <p>Авторизуйтесь для доступа к системе</p>

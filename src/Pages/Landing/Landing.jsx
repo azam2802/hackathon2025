@@ -7,8 +7,8 @@ const Landing = () => {
       {/* Верхнее меню */}
       <header className="landing-header">
         <div className="logo-block">
-          <img src="/logo-gov.svg" alt="ГосАналитика" className="logo-img" />
-          <span className="logo-text">ГосАналитика</span>
+          <img src="/logo-gov.svg" alt="PublicPulse" className="logo-img" />
+          <span className="logo-text">PublicPulse</span>
         </div>
         <nav className="landing-nav">
           <a href="#about">О сервисе</a>
@@ -69,7 +69,7 @@ const Landing = () => {
         <div className="about-content">
           <h2>О сервисе</h2>
           <p>
-            ГосАналитика — это современная платформа для подачи, отслеживания и анализа обращений граждан. Мы делаем процесс коммуникации между гражданами и государством проще, прозрачнее и эффективнее.
+            PublicPulse — это современная платформа для подачи, отслеживания и анализа обращений граждан. Мы делаем процесс коммуникации между гражданами и государством проще, прозрачнее и эффективнее.
           </p>
         </div>
       </section>

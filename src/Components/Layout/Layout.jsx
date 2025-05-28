@@ -5,7 +5,7 @@ import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
 import { useAuth } from '../../hooks/useAuth'
 import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
-import { Assignment, Search, BarChart, Analytics, Logout } from '@mui/icons-material'
+import { Assignment, Search, BarChart, Analytics, Logout, Menu, AdminPanelSettings } from '@mui/icons-material'
 import { IconDashboard } from '@tabler/icons-react';
 
 
@@ -13,6 +13,7 @@ const Layout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -28,6 +29,14 @@ const Layout = () => {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   // Show admin panel for superadmin only if they chose to view it
@@ -56,8 +65,8 @@ const Layout = () => {
         <div className="auth-container">
           <div className="auth-header">
             <div className="logo">
-              <img src="/logo-gov.svg" alt="ГосАналитика" />
-              <span>ГосАналитика</span>
+              <img src="/logo-gov.svg" alt="PublicPulse" />
+              <span>PublicPulse</span>
             </div>
             <h1>Ожидание одобрения</h1>
             <p>Ваш аккаунт находится на рассмотрении</p>
@@ -88,29 +97,52 @@ const Layout = () => {
   return (
     <div className="app-layout">
       <ParticlesBackground />
-      <div className="sidebar">
+      
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <button className="mobile-burger" onClick={toggleMobileMenu}>
+          <Menu />
+        </button>
+        <div className="mobile-logo">
+          <img src="/logo-gov.svg" alt="PublicPulse" />
+          <span>PublicPulse</span>
+        </div>
+        <div className="mobile-user">
+          <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
+          <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      <div 
+        className={`sidebar-overlay ${isMobileMenuOpen ? 'active' : ''}`}
+        onClick={closeMobileMenu}
+      ></div>
+
+      {/* Sidebar */}
+      <div className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
-          <img src="/logo-gov.svg" alt="ГосАналитика" />
-          <span>ГосАналитика</span>
+          <img src="/logo-gov.svg" alt="PublicPulse" />
+          <span>PublicPulse</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/admin" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin" end className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
             <IconDashboard className="sidebar-icon" />
             <span>Дашборд</span>
           </NavLink>
-          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
             <Assignment className="sidebar-icon" />
             <span>Обращения</span>
           </NavLink>
-          <NavLink to="/admin/services" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/services" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
             <Search className="sidebar-icon" />
             <span>Услуги</span>
           </NavLink>
-          <NavLink to="/admin/reports" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/reports" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
             <BarChart className="sidebar-icon" />
             <span>Отчеты</span>
           </NavLink>
-          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
             <Analytics className="sidebar-icon" />
             <span>Аналитика</span>
           </NavLink>
@@ -121,8 +153,13 @@ const Layout = () => {
             <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
           </div>
           {isSuperAdmin(user?.email) && (
-            <button onClick={() => setShowAdminPanel(true)} className="admin-panel-button">
-              Админ панель
+            <button 
+              onClick={() => setShowAdminPanel(true)} 
+              className="admin-panel-button"
+              aria-label="Открыть админ панель"
+            >
+              <AdminPanelSettings className="sidebar-icon" />
+              <span>Админ панель</span>
             </button>
           )}
           <button onClick={handleLogout} className="logout-button">
@@ -131,6 +168,7 @@ const Layout = () => {
           </button>
         </div>
       </div>
+
       <div className="main-layout-content">
         <main className="main-content">
           <div className="container">
@@ -139,7 +177,7 @@ const Layout = () => {
         </main>
         <footer className="footer">
           <div className="container">
-            <p>&copy; {new Date().getFullYear()} - ГосАналитика | Система анализа эффективности государственных услуг</p>
+            <p>&copy; {new Date().getFullYear()} - PublicPulse | Система анализа эффективности государственных услуг</p>
           </div>
         </footer>
       </div>

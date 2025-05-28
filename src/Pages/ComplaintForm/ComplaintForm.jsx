@@ -184,8 +184,8 @@ const ComplaintForm = () => {
       <ParticlesBackground />
       <div className="form-header" data-aos="fade-down">
         <div className="header-logo">
-          <img src="/logo-gov.svg" alt="ГосАналитика" />
-          <span>ГосАналитика</span>
+          <img src="/logo-gov.svg" alt="PublicPulse" />
+          <span>PublicPulse</span>
         </div>
         <h1>Подача обращения</h1>
         <p>Заполните форму ниже, чтобы подать обращение или жалобу</p>

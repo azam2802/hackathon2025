@@ -55,8 +55,8 @@ const Register = () => {
         <div className="auth-container">
           <div className="auth-header">
             <div className="logo">
-              <img src="/logo-gov.svg" alt="ГосАналитика" />
-              <span>ГосАналитика</span>
+              <img src="/logo-gov.svg" alt="PublicPulse" />
+              <span>PublicPulse</span>
             </div>
             <h1>Регистрация успешна</h1>
           </div>
@@ -83,8 +83,8 @@ const Register = () => {
       <div className="auth-container">
         <div className="auth-header">
           <div className="logo">
-            <img src="/logo-gov.svg" alt="ГосАналитика" />
-            <span>ГосАналитика</span>
+            <img src="/logo-gov.svg" alt="PublicPulse" />
+            <span>PublicPulse</span>
           </div>
           <h1>Регистрация в системе</h1>
           <p>Создайте аккаунт для доступа к системе</p>
