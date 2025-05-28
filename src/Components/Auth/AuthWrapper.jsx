@@ -1,4 +1,4 @@
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../Hooks/useAuth';
 import { isSuperAdmin } from '../../firebase/auth';
 import AuthPage from './AuthPage';
 import AdminPanel from '../Admin/AdminPanel';

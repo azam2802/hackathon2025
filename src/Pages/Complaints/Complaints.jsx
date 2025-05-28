@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import './Complaints.scss'
 import { useFetchComplaints } from '../../Hooks/useFetchComplaints';
+import { useReportGenerator } from '../../Hooks/useReportGenerator';
 import ComplaintModal from '../../Components/ComplaintModal/ComplaintModal';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -103,6 +104,13 @@ const Complaints = () => {
     goToPage,
     refreshData
   } = useFetchComplaints();
+  
+  // Get the report generator functions
+  const { 
+    generateComplaintsReport, 
+    exportComplaintsToCsv, 
+    exportComplaintsToExcel 
+  } = useReportGenerator();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedComplaint, setSelectedComplaint] = useState(null);
@@ -339,12 +347,87 @@ const Complaints = () => {
     refreshData();
   };
 
+  // Handler for generating complaints report (PDF)
+  const handleGenerateReport = async () => {
+    if (loading) return;
+    
+    try {
+      await generateComplaintsReport({
+        complaints: displayedComplaints,
+        stats
+      });
+    } catch (error) {
+      console.error('Error generating complaints report:', error);
+      // Show error notification if needed
+    }
+  };
+
+  // Handler for exporting complaints to CSV
+  const handleExportToCsv = () => {
+    if (loading) return;
+    
+    try {
+      exportComplaintsToCsv({
+        complaints: displayedComplaints,
+        stats
+      });
+    } catch (error) {
+      console.error('Error exporting complaints to CSV:', error);
+      // Show error notification if needed
+    }
+  };
+
+  // Handler for exporting complaints to Excel
+  const handleExportToExcel = () => {
+    if (loading) return;
+    
+    try {
+      exportComplaintsToExcel({
+        complaints: displayedComplaints,
+        stats
+      });
+    } catch (error) {
+      console.error('Error exporting complaints to Excel:', error);
+      // Show error notification if needed
+    }
+  };
+
   return (
     <div className="complaints-page fade-in">
       <div className="page-title" data-aos="fade-down">
         <h1>{t('complaints.analysisTitle')}</h1>
         <div className="actions">
-          <button className="btn btn-outline">{t('complaints.export')}</button>
+          <div className="dropdown">
+            <button 
+              className="btn btn-outline dropdown-toggle"
+              disabled={loading}
+            >
+              {t('complaints.export')}
+            </button>
+            <div className="dropdown-menu">
+              <button 
+                className="dropdown-item"
+                onClick={handleGenerateReport}
+                disabled={loading}
+              >
+                PDF
+              </button>
+              <button 
+                className="dropdown-item"
+                onClick={handleExportToCsv}
+                disabled={loading}
+              >
+                CSV
+              </button>
+              <button 
+                className="dropdown-item"
+                onClick={handleExportToExcel}
+                disabled={loading}
+              >
+                Excel
+              </button>
+            </div>
+          </div>
           <button 
             className={`btn btn-refresh ${loading ? 'loading' : ''}`}
             onClick={refreshData}

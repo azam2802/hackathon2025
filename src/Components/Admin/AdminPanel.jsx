@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getPendingUsers, approveUser, rejectUser } from '../../firebase/firestore';
 import { signOutUser } from '../../firebase/auth';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../Hooks/useAuth';
 import './AdminPanel.scss';
 import { useTranslation } from 'react-i18next';
 
