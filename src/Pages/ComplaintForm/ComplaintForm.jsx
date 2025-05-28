@@ -15,6 +15,10 @@ import {
   Phone,
   Email
 } from '@mui/icons-material';
+import { 
+  getTranslatedRegions, 
+  getTranslatedCityName 
+} from '../../utils/translationMappings';
 
 const ComplaintForm = () => {
   const { t } = useTranslation();
@@ -75,7 +79,7 @@ const ComplaintForm = () => {
     ]
   };
 
-  const regions = Object.keys(REGIONS_CITIES);
+  const regions = getTranslatedRegions(t);
 
   const reportTypes = [
     t('complaintForm.reportTypeComplaint'),
@@ -283,7 +287,7 @@ const ComplaintForm = () => {
               >
                 <option value="">{t('complaintForm.selectRegion')}</option>
                 {regions.map(region => (
-                  <option key={region} value={region}>{region}</option>
+                  <option key={region.value} value={region.value}>{region.label}</option>
                 ))}
               </select>
             </div>
@@ -301,7 +305,7 @@ const ComplaintForm = () => {
                   {formData.region ? t('complaintForm.selectCity') : t('complaintForm.selectRegionFirst')}
                 </option>
                 {formData.region && REGIONS_CITIES[formData.region]?.map(city => (
-                  <option key={city} value={city}>{city}</option>
+                  <option key={city} value={city}>{getTranslatedCityName(city, t)}</option>
                 ))}
               </select>
             </div>
