@@ -34,12 +34,12 @@
       span {
         font-size: 1.5rem;
         font-weight: 600;
-        color: #2d3748;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #1723a8;
+        text-shadow: none;
+        background: none;
+        -webkit-background-clip: unset;
+        -webkit-text-fill-color: unset;
+        background-clip: unset;
       }
     }
 
@@ -47,11 +47,12 @@
       font-size: 2.5rem;
       font-weight: 700;
       margin-bottom: 1rem;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      text-shadow: none;
+      color: #252b70;
+      background: none;
+      -webkit-background-clip: unset;
+      -webkit-text-fill-color: unset;
+      background-clip: unset;
     }
 
     p {
@@ -81,13 +82,13 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border-radius: 16px;
-      border: 1px solid rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(26, 35, 126, 0.1);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       transition: all 0.3s ease;
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        box-shadow: 0 8px 25px rgba(26, 35, 126, 0.15);
       }
       
       &:last-child {
@@ -102,7 +103,7 @@
         color: #2d3748;
         margin-bottom: 1.5rem;
         padding-bottom: 0.5rem;
-        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        border-bottom: 2px solid rgba(26, 35, 126, 0.2);
       }
     }
 
@@ -132,7 +133,7 @@
       textarea {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 2px solid rgba(102, 126, 234, 0.2);
+        border: 2px solid rgba(26, 35, 126, 0.2);
         border-radius: 12px;
         font-size: 1rem;
         transition: all 0.3s ease;
@@ -142,8 +143,8 @@
 
         &:focus {
           outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+          border-color: #1a237e;
+          box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.15);
           background: rgba(255, 255, 255, 1);
           transform: translateY(-1px);
         }
@@ -161,7 +162,7 @@
 
       select {
         cursor: pointer;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%231a237e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
         background-position: right 0.5rem center;
         background-repeat: no-repeat;
         background-size: 1.5em 1.5em;
@@ -219,22 +220,22 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      background: linear-gradient(135deg, rgba(26, 35, 126, 0.1) 0%, rgba(26, 35, 126, 0.1) 100%);
       z-index: -1;
     }
 
     .success-icon {
       font-size: 4rem;
       margin-bottom: 2rem;
-      color: #10b981;
-      filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
+      color: #1a237e;
+      filter: drop-shadow(0 4px 8px rgba(26, 35, 126, 0.3));
       animation: successPulse 2s ease-in-out infinite;
     }
 
     h1 {
       font-size: 2rem;
       font-weight: 700;
-      color: #065f46;
+      color: #1a237e;
       margin-bottom: 1rem;
     }
 
@@ -245,7 +246,7 @@
       line-height: 1.6;
 
       strong {
-        color: #667eea;
+        color: #1a237e;
         font-weight: 600;
       }
     }
@@ -296,41 +297,41 @@
     }
 
     &.btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #383f89;
       color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
       
       &:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        box-shadow: 0 10px 25px rgba(26, 35, 126, 0.4);
+        background: #383f89;
       }
 
       &:active:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 5px 15px rgba(26, 35, 126, 0.3);
       }
 
       &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        box-shadow: 0 2px 8px rgba(26, 35, 126, 0.2);
       }
     }
 
     &.btn-outline {
       background: rgba(255, 255, 255, 0.8);
-      color: #667eea;
-      border-color: #667eea;
+      color: #383f89;
+      border-color: #383f89;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
 
       &:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #383f89;
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 8px 20px rgba(26, 35, 126, 0.3);
       }
 
       &:active {
@@ -382,6 +383,7 @@
 
   .form-section {
     animation: float 6s ease-in-out infinite;
+    z-index: auto;
     
     &:nth-child(2) {
       animation-delay: -2s;
@@ -480,7 +482,7 @@
 .photo-upload-area {
   width: 100%;
   min-height: 200px;
-  border: 2px dashed #667eea;
+  border: 2px dashed #1a237e;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -491,7 +493,7 @@
   overflow: hidden;
 
   &:hover {
-    border-color: #4c51bf;
+    border-color: #0f154f;
     background-color: #f1f5f9;
   }
 }
