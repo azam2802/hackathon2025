@@ -245,7 +245,7 @@ def create_email_html_content(complaint_data, status, language='ru'):
                 </p>
                 
                 <p style="margin-top: 10px;">
-                    <a href="http://localhost:5173">{'Перейти на сайт' if language == 'ru' else 'Сайтка өтүү'}</a>
+                    <a href="https://publicpulse-front-739844766362.asia-southeast2.run.app/">{'Перейти на сайт' if language == 'ru' else 'Сайтка өтүү'}</a>
                 </p>
             </div>
         </div>

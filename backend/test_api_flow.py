@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 
-API_BASE_URL = 'http://localhost:8000'
+API_BASE_URL = 'https://publicpulse-back-739844766362.asia-southeast2.run.app/'
 
 def test_website_submission_flow():
     """Test complete flow: form submission → database → email"""

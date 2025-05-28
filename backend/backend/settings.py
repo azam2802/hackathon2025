@@ -34,7 +34,7 @@ SECRET_KEY = "django-insecure-_fgrln@xm^^p1%xw$2(!z=^)zyu3^gm7hld12i7^f0%aomzzwn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -138,6 +138,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",
+    "https://publicpulse-front-739844766362.asia-southeast2.run.app"
 ]
 
 CORS_ALLOW_METHODS = [
