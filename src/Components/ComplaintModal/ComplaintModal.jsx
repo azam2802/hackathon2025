@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import './ComplaintModal.scss';
+import { useTranslation } from 'react-i18next';
 
 // Функция для парсинга даты из разных форматов
 const parseDate = (dateString) => {
@@ -56,6 +57,7 @@ const parseDate = (dateString) => {
 };
 
 const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     status: '',
@@ -163,7 +165,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
       onClose();
     } catch (error) {
       console.error('Error updating complaint:', error);
-      alert('Ошибка при обновлении обращения: ' + error.message);
+      alert(t('complaints.updateError') + ': ' + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -171,28 +173,37 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
   
   // Форматируем координаты
   const formatCoordinates = () => {
-    if (!complaint.latitude || !complaint.longitude) return 'Не указаны';
+    if (!complaint.latitude || !complaint.longitude) return t('complaints.notSpecified');
     return `${complaint.latitude.toFixed(6)}, ${complaint.longitude.toFixed(6)}`;
   };
   
   // Получаем приоритет в виде текста
   const getPriorityText = (priority) => {
     switch(priority) {
-      case 'critical': return 'Критический';
-      case 'high': return 'Высокий';
-      case 'medium': return 'Средний';
-      case 'low': return 'Низкий';
-      default: return 'Не указан';
+      case 'critical':
+        return t('status.critical');
+      case 'high':
+        return t('status.high');
+      case 'medium':
+        return t('status.medium');
+      case 'low':
+        return t('status.low');
+      default:
+        return t('complaints.notSpecified');
     }
   };
   
   // Получаем статус в виде текста
   const getStatusText = (status) => {
     switch(status) {
-      case 'pending': return 'В работе';
-      case 'resolved': return 'Решено';
-      case 'cancelled': return 'Отменено';
-      default: return 'Не указан';
+      case 'pending':
+        return t('status.inProgress');
+      case 'resolved':
+        return t('status.resolved');
+      case 'cancelled':
+        return t('status.rejected');
+      default:
+        return t('complaints.notSpecified');
     }
   };
   
@@ -228,22 +239,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
   const formatDaysPassed = (days) => {
     if (!days) return '';
     
-    const lastDigit = days % 10;
-    const lastTwoDigits = days % 100;
-    
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-      return `${days} дней`;
-    }
-    
-    if (lastDigit === 1) {
-      return `${days} день`;
-    }
-    
-    if (lastDigit >= 2 && lastDigit <= 4) {
-      return `${days} дня`;
-    }
-    
-    return `${days} дней`;
+    return `${days} ${t('complaints.days')}`;
   };
   
   // Рендерим модальное окно через портал в корень документа
@@ -252,10 +248,10 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
       <div className="modal-overlay" onClick={onClose}></div>
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Обращение #{complaint.id.substring(0, 5)}</h2>
+          <h2>{t('complaints.complaint')} #{complaint.id.substring(0, 5)}</h2>
           {isOverdue() && (
             <div className="overdue-badge">
-              Просрочено на {formatDaysPassed(getDaysPassed())}
+              {t('complaints.overdueBy')} {formatDaysPassed(getDaysPassed())}
             </div>
           )}
           <button className="close-button" onClick={onClose}>×</button>
@@ -264,52 +260,52 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
         <div className="modal-body">
           <div className="complaint-info">
             <div className="info-section">
-              <h3>Основная информация</h3>
+              <h3>{t('complaints.basicInfo')}</h3>
               <div className="info-grid">
                 <div className="info-item">
                   <span className="label">ID:</span>
                   <span className="value">{complaint.id}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Дата создания:</span>
-                  <span className="value">{complaint.created_at || 'Не указана'}</span>
+                  <span className="label">{t('complaints.creationDate')}:</span>
+                  <span className="value">{complaint.created_at || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Дата разрешения:</span>
-                  <span className="value">{complaint.resolved_at || 'Не разрешено'}</span>
+                  <span className="label">{t('complaints.resolutionDate')}:</span>
+                  <span className="value">{complaint.resolved_at || t('complaints.notResolved')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Услуга:</span>
-                  <span className="value">{complaint.service || 'Не указана'}</span>
+                  <span className="label">{t('complaints.service')}:</span>
+                  <span className="value">{complaint.service || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Ведомство:</span>
-                  <span className="value">{complaint.agency || 'Не указано'}</span>
+                  <span className="label">{t('complaints.agency')}:</span>
+                  <span className="value">{complaint.agency || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Тип обращения:</span>
-                  <span className="value">{complaint.report_type || 'Не указан'}</span>
+                  <span className="label">{t('complaints.complaintType')}:</span>
+                  <span className="value">{complaint.report_type || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Источник:</span>
-                  <span className="value">{complaint.submission_source || 'Не указан'}</span>
+                  <span className="label">{t('complaints.source')}:</span>
+                  <span className="value">{complaint.submission_source || t('complaints.notSpecified')}</span>
                 </div>
               </div>
             </div>
             
             <div className="info-section">
-              <h3>Текст обращения</h3>
+              <h3>{t('complaints.complaintText')}</h3>
               <div className="complaint-text">
-                {complaint.report_text || 'Текст обращения отсутствует'}
+                {complaint.report_text || t('complaints.textMissing')}
               </div>
             </div>
             
             <div className="info-section">
-              <h3>Информация о заявителе</h3>
+              <h3>{t('complaints.applicantInfo')}</h3>
               <div className="info-grid">
                 <div className="info-item">
-                  <span className="label">Контакт:</span>
-                  <span className="value">{complaint.contact_info || 'Не указан'}</span>
+                  <span className="label">{t('complaints.contact')}:</span>
+                  <span className="value">{complaint.contact_info || t('complaints.notSpecified')}</span>
                 </div>
                 {complaint.telegram_username && (
                   <div className="info-item">
@@ -318,43 +314,43 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
                   </div>
                 )}
                 <div className="info-item">
-                  <span className="label">Язык:</span>
-                  <span className="value">{complaint.language || 'Не указан'}</span>
+                  <span className="label">{t('complaints.language')}:</span>
+                  <span className="value">{complaint.language || t('complaints.notSpecified')}</span>
                 </div>
               </div>
             </div>
             
             <div className="info-section">
-              <h3>Местоположение</h3>
+              <h3>{t('complaints.location')}</h3>
               <div className="info-grid">
                 <div className="info-item">
-                  <span className="label">Адрес:</span>
-                  <span className="value">{complaint.address || 'Не указан'}</span>
+                  <span className="label">{t('complaints.address')}:</span>
+                  <span className="value">{complaint.address || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Город:</span>
-                  <span className="value">{complaint.city || 'Не указан'}</span>
+                  <span className="label">{t('complaints.city')}:</span>
+                  <span className="value">{complaint.city || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Регион:</span>
-                  <span className="value">{complaint.region || 'Не указан'}</span>
+                  <span className="label">{t('complaints.region')}:</span>
+                  <span className="value">{complaint.region || t('complaints.notSpecified')}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Координаты:</span>
+                  <span className="label">{t('complaints.coordinates')}:</span>
                   <span className="value">{formatCoordinates()}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">Источник координат:</span>
-                  <span className="value">{complaint.location_source || 'Не указан'}</span>
+                  <span className="label">{t('complaints.coordinatesSource')}:</span>
+                  <span className="value">{complaint.location_source || t('complaints.notSpecified')}</span>
                 </div>
               </div>
             </div>
           </div>
           
           <form className="edit-form" onSubmit={handleSubmit}>
-            <h3>Обработка обращения</h3>
+            <h3>{t('complaints.processingComplaint')}</h3>
             <div className="form-group">
-              <label htmlFor="status">Статус:</label>
+              <label htmlFor="status">{t('complaints.status')}:</label>
               <select 
                 id="status" 
                 name="status" 
@@ -362,20 +358,20 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
                 onChange={handleInputChange}
                 className={formData.status !== complaint.status ? 'changed' : ''}
               >
-                <option value="">Выберите статус</option>
-                <option value="pending">В работе</option>
-                <option value="resolved">Решено</option>
-                <option value="cancelled">Отменено</option>
+                <option value="">{t('complaints.selectStatus')}</option>
+                <option value="pending">{t('status.inProgress')}</option>
+                <option value="resolved">{t('status.resolved')}</option>
+                <option value="cancelled">{t('status.rejected')}</option>
               </select>
               {formData.status !== complaint.status && (
                 <div className="change-indicator">
-                  <span>Текущий статус: { getStatusText(complaint.status)}</span>
+                  <span>{t('complaints.currentStatus')}: { getStatusText(complaint.status)}</span>
                 </div>
               )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="importance">Приоритет:</label>
+              <label htmlFor="importance">{t('complaints.priority')}:</label>
               <select 
                 id="importance" 
                 name="importance" 
@@ -383,27 +379,27 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
                 onChange={handleInputChange}
                 className={formData.importance !== complaint.importance ? 'changed' : ''}
               >
-                <option value="">Выберите приоритет</option>
-                <option value="critical">Критический</option>
-                <option value="high">Высокий</option>
-                <option value="medium">Средний</option>
-                <option value="low">Низкий</option>
+                <option value="">{t('complaints.selectPriority')}</option>
+                <option value="critical">{t('status.critical')}</option>
+                <option value="high">{t('status.high')}</option>
+                <option value="medium">{t('status.medium')}</option>
+                <option value="low">{t('status.low')}</option>
               </select>
               {formData.importance !== complaint.importance && (
                 <div className="change-indicator">
-                  <span>Текущий приоритет: {getPriorityText(complaint.importance)}</span>
+                  <span>{t('complaints.currentPriority')}: {getPriorityText(complaint.importance)}</span>
                 </div>
               )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="notes">Примечания:</label>
+              <label htmlFor="notes">{t('complaints.notes')}:</label>
               <textarea 
                 id="notes" 
                 name="notes" 
                 value={formData.notes} 
                 onChange={handleInputChange}
-                placeholder="Добавьте примечания к обращению"
+                placeholder={t('complaints.notesPlaceholder')}
                 className={formData.notes !== complaint.notes ? 'changed' : ''}
               ></textarea>
             </div>
@@ -415,7 +411,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
                 onClick={onClose}
                 disabled={isLoading}
               >
-                Отмена
+                {t('complaints.cancel')}
               </button>
               <button 
                 type="submit" 
@@ -426,7 +422,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
                   formData.notes === complaint.notes
                 )}
               >
-                {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
+                {isLoading ? t('complaints.saving') : t('complaints.saveChanges')}
               </button>
             </div>
           </form>

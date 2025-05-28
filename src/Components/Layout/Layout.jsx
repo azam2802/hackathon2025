@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import './Layout.scss'
 import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../Hooks/useAuth'
 import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
-import { Assignment, Search, BarChart, Analytics, Logout, Menu, AdminPanelSettings } from '@mui/icons-material'
-import { IconDashboard } from '@tabler/icons-react';
-
+import { Assignment, Search, BarChart, Analytics, Logout, Speed, AdminPanelSettings } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher'
+import { Menu } from '@mui/material'
 
 const Layout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!loading && !user) {
       navigate('/login');
     }
@@ -65,8 +66,8 @@ const Layout = () => {
         <div className="auth-container">
           <div className="auth-header">
             <div className="logo">
-              <img src="/logo-gov.svg" alt="PublicPulse" />
-              <span>PublicPulse</span>
+              <img src="/logo-gov.svg" alt="Public Pulse" />
+              <span>Public Pulse</span>
             </div>
             <h1>Ожидание одобрения</h1>
             <p>Ваш аккаунт находится на рассмотрении</p>
@@ -83,7 +84,7 @@ const Layout = () => {
               <p className="status-note">Ваш запрос находится на рассмотрении.</p>
               <div className="pending-actions">
                 <button onClick={handleLogout} className="logout-btn">
-                  Выйти из аккаунта
+                  {t('navigation.logout')}
                 </button>
               </div>
             </div>
@@ -122,29 +123,21 @@ const Layout = () => {
       {/* Sidebar */}
       <div className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
-          <img src="/logo-gov.svg" alt="PublicPulse" />
-          <span>PublicPulse</span>
+          <img src="/logo-gov.svg" alt="Public Pulse" />
+          <span>Public Pulse</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/admin" end className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
-            <IconDashboard className="sidebar-icon" />
-            <span>Дашборд</span>
+          <NavLink to="/admin/dashboard" end className={({ isActive }) => isActive ? 'active' : ''}>
+            <Speed className="sidebar-icon" />
+            <span>{t('navigation.dashboard')}</span>
           </NavLink>
-          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
+          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
             <Assignment className="sidebar-icon" />
-            <span>Обращения</span>
+            <span>{t('navigation.complaints')}</span>
           </NavLink>
-          <NavLink to="/admin/services" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
-            <Search className="sidebar-icon" />
-            <span>Услуги</span>
-          </NavLink>
-          <NavLink to="/admin/reports" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
-            <BarChart className="sidebar-icon" />
-            <span>Отчеты</span>
-          </NavLink>
-          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobileMenu}>
+          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
             <Analytics className="sidebar-icon" />
-            <span>Аналитика</span>
+            <span>{t('navigation.analytics')}</span>
           </NavLink>
         </nav>
         <div className="sidebar-footer">
@@ -162,9 +155,12 @@ const Layout = () => {
               <span>Админ панель</span>
             </button>
           )}
+          <div className="language-switcher sidebar-language">
+            <LanguageSwitcher />
+          </div>
           <button onClick={handleLogout} className="logout-button">
             <Logout className="sidebar-icon" />
-            <span>Выход</span>
+            <span>{t('navigation.logout')}</span>
           </button>
         </div>
       </div>
@@ -177,7 +173,7 @@ const Layout = () => {
         </main>
         <footer className="footer">
           <div className="container">
-            <p>&copy; {new Date().getFullYear()} - PublicPulse | Система анализа эффективности государственных услуг</p>
+            <p>&copy; {new Date().getFullYear()} - {t('app.title')}</p>
           </div>
         </footer>
       </div>

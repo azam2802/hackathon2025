@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import './Complaints.scss'
 import { useFetchComplaints } from '../../Hooks/useFetchComplaints';
+import { useReportGenerator } from '../../Hooks/useReportGenerator';
 import ComplaintModal from '../../Components/ComplaintModal/ComplaintModal';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Функция для парсинга даты из разных форматов
 const parseDate = (dateString) => {
@@ -85,6 +87,7 @@ const calculateDaysPassed = (dateString) => {
 };
 
 const Complaints = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { 
@@ -101,6 +104,13 @@ const Complaints = () => {
     goToPage,
     refreshData
   } = useFetchComplaints();
+  
+  // Get the report generator functions
+  const { 
+    generateComplaintsReport, 
+    exportComplaintsToCsv, 
+    exportComplaintsToExcel 
+  } = useReportGenerator();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedComplaint, setSelectedComplaint] = useState(null);
@@ -181,15 +191,15 @@ const Complaints = () => {
   const getPriorityText = (importance) => {
     switch(importance) {
       case 'critical':
-        return 'Критический';
+        return t('status.critical');
       case 'high':
-        return 'Высокий';
+        return t('status.high');
       case 'medium':
-        return 'Средний';
+        return t('status.medium');
       case 'low':
-        return 'Низкий';
+        return t('status.low');
       default:
-        return 'Средний';
+        return t('status.medium');
     }
   };
   
@@ -213,13 +223,13 @@ const Complaints = () => {
   const getStatusText = (status) => {
     switch(status) {
       case 'resolved':
-        return 'Решено';
+        return t('status.resolved');
       case 'pending':
-        return 'В работе';
+        return t('status.inProgress');
       case 'cancelled':
-        return 'Отменено';
+        return t('status.rejected');
       default:
-        return 'Новое';
+        return t('status.pending');
     }
   };
   
@@ -337,18 +347,93 @@ const Complaints = () => {
     refreshData();
   };
 
+  // Handler for generating complaints report (PDF)
+  const handleGenerateReport = async () => {
+    if (loading) return;
+    
+    try {
+      await generateComplaintsReport({
+        complaints: displayedComplaints,
+        stats
+      });
+    } catch (error) {
+      console.error('Error generating complaints report:', error);
+      // Show error notification if needed
+    }
+  };
+
+  // Handler for exporting complaints to CSV
+  const handleExportToCsv = () => {
+    if (loading) return;
+    
+    try {
+      exportComplaintsToCsv({
+        complaints: displayedComplaints,
+        stats
+      });
+    } catch (error) {
+      console.error('Error exporting complaints to CSV:', error);
+      // Show error notification if needed
+    }
+  };
+
+  // Handler for exporting complaints to Excel
+  const handleExportToExcel = () => {
+    if (loading) return;
+    
+    try {
+      exportComplaintsToExcel({
+        complaints: displayedComplaints,
+        stats
+      });
+    } catch (error) {
+      console.error('Error exporting complaints to Excel:', error);
+      // Show error notification if needed
+    }
+  };
+
   return (
     <div className="complaints-page fade-in">
       <div className="page-title" data-aos="fade-down">
-        <h1>Анализ обращений граждан</h1>
+        <h1>{t('complaints.analysisTitle')}</h1>
         <div className="actions">
-          <button className="btn btn-outline">Экспорт</button>
+          <div className="dropdown">
+            <button 
+              className="btn btn-outline dropdown-toggle"
+              disabled={loading}
+            >
+              {t('complaints.export')}
+            </button>
+            <div className="dropdown-menu">
+              <button 
+                className="dropdown-item"
+                onClick={handleGenerateReport}
+                disabled={loading}
+              >
+                PDF
+              </button>
+              <button 
+                className="dropdown-item"
+                onClick={handleExportToCsv}
+                disabled={loading}
+              >
+                CSV
+              </button>
+              <button 
+                className="dropdown-item"
+                onClick={handleExportToExcel}
+                disabled={loading}
+              >
+                Excel
+              </button>
+            </div>
+          </div>
           <button 
             className={`btn btn-refresh ${loading ? 'loading' : ''}`}
             onClick={refreshData}
             disabled={loading}
           >
-            {loading ? 'Обновление...' : 'Обновить данные'}
+            {loading ? t('complaints.updating') : t('complaints.refreshData')}
           </button>
         </div>
       </div>
@@ -358,7 +443,7 @@ const Complaints = () => {
           <span className="search-icon">🔍</span>
           <input 
             type="text" 
-            placeholder="Поиск по обращениям..." 
+            placeholder={t('complaints.searchPlaceholder')}
             value={searchTerm}
             onChange={handleSearch}
             disabled={showOverdue}
@@ -372,11 +457,11 @@ const Complaints = () => {
               onChange={handleStatusChange}
               disabled={showOverdue}
             >
-              <option value="" disabled>Статус</option>
-              <option value="all">Все статусы</option>
-              <option value="pending">В работе</option>
-              <option value="resolved">Решенные</option>
-              <option value="cancelled">Отмененные</option>
+              <option value="" disabled>{t('complaints.status')}</option>
+              <option value="all">{t('complaints.allStatuses')}</option>
+              <option value="pending">{t('status.inProgress')}</option>
+              <option value="resolved">{t('status.resolved')}</option>
+              <option value="cancelled">{t('status.rejected')}</option>
             </select>
           </div>
           
@@ -386,28 +471,28 @@ const Complaints = () => {
               onChange={handleAgencyChange}
               disabled={showOverdue}
             >
-              <option value="" disabled>Ведомство</option>
-              <option value="">Все</option>
-              <option value="Мэрия">Мэрия</option>
-              <option value="Министерство внутренних дел">Министерство внутренних дел</option>
-              <option value="Министерство чрезвычайных ситуаций">Министерство чрезвычайных ситуаций</option>
-              <option value="Министерство иностранных дел">Министерство иностранных дел</option>
-              <option value="Министерство юстиции">Министерство юстиции</option>
-              <option value="Министерство обороны">Министерство обороны</option>
-              <option value="Министерство финансов">Министерство финансов</option>
-              <option value="Министерство сельского хозяйства">Министерство сельского хозяйства</option>
-              <option value="Министерство транспорта">Министерство транспорта</option>
-              <option value="Министерство образования и науки">Министерство образования и науки</option>
-              <option value="Министерство экономики и коммерции">Министерство экономики и коммерции</option>
-              <option value="Министерство цифрового развития">Министерство цифрового развития</option>
-              <option value="Министерство труда">Министерство труда</option>
-              <option value="Министерство здравоохранения">Министерство здравоохранения</option>
-              <option value="Министерство энергетики">Министерство энергетики</option>
-              <option value="Министерство культуры">Министерство культуры</option>
-              <option value="Министерство природных ресурсов">Министерство природных ресурсов</option>
-              <option value="Министерство архитектуры">Министерство архитектуры</option>
-              <option value="Государственный комитет национальной безопасности">Государственный комитет национальной безопасности</option>
-              <option value="Социальный фонд Кыргызской Республики">Социальный фонд Кыргызской Республики</option>
+              <option value="" disabled>{t('complaints.agency')}</option>
+              <option value="">{t('complaints.all')}</option>
+              <option value="Мэрия">{t('agencies.mayor')}</option>
+              <option value="Министерство внутренних дел">{t('agencies.internalAffairs')}</option>
+              <option value="Министерство чрезвычайных ситуаций">{t('agencies.emergency')}</option>
+              <option value="Министерство иностранных дел">{t('agencies.foreignAffairs')}</option>
+              <option value="Министерство юстиции">{t('agencies.justice')}</option>
+              <option value="Министерство обороны">{t('agencies.defense')}</option>
+              <option value="Министерство финансов">{t('agencies.finance')}</option>
+              <option value="Министерство сельского хозяйства">{t('agencies.agriculture')}</option>
+              <option value="Министерство транспорта">{t('agencies.transport')}</option>
+              <option value="Министерство образования и науки">{t('agencies.education')}</option>
+              <option value="Министерство экономики и коммерции">{t('agencies.economy')}</option>
+              <option value="Министерство цифрового развития">{t('agencies.digitalDevelopment')}</option>
+              <option value="Министерство труда">{t('agencies.labor')}</option>
+              <option value="Министерство здравоохранения">{t('agencies.health')}</option>
+              <option value="Министерство энергетики">{t('agencies.energy')}</option>
+              <option value="Министерство культуры">{t('agencies.culture')}</option>
+              <option value="Министерство природных ресурсов">{t('agencies.naturalResources')}</option>
+              <option value="Министерство архитектуры">{t('agencies.architecture')}</option>
+              <option value="Государственный комитет национальной безопасности">{t('agencies.nationalSecurity')}</option>
+              <option value="Социальный фонд Кыргызской Республики">{t('agencies.socialFund')}</option>
             </select>
           </div>
           
@@ -417,12 +502,12 @@ const Complaints = () => {
               onChange={handleImportanceChange}
               disabled={showOverdue}
             >
-              <option value="" disabled>Приоритет</option>
-              <option value="all">Все</option>
-              <option value="critical">Критический</option>
-              <option value="high">Высокий</option>
-              <option value="medium">Средний</option>
-              <option value="low">Низкий</option>
+              <option value="" disabled>{t('complaints.priority')}</option>
+              <option value="all">{t('complaints.all')}</option>
+              <option value="critical">{t('status.critical')}</option>
+              <option value="high">{t('status.high')}</option>
+              <option value="medium">{t('status.medium')}</option>
+              <option value="low">{t('status.low')}</option>
             </select>
           </div>
           
@@ -430,7 +515,7 @@ const Complaints = () => {
             className={`btn btn-filter-overdue ${showOverdue ? 'active' : ''}`}
             onClick={handleOverdueFilter}
           >
-            Просроченные ({stats.overdue})
+            {t('complaints.overdue')} ({stats.overdue})
           </button>
         </div>
       </div>
@@ -438,36 +523,36 @@ const Complaints = () => {
       <div className="complaints-stats">
         <div className="stat-item" data-aos="flip-up" data-aos-delay="200">
           <span className="stat-value">{stats.total.toLocaleString()}</span>
-          <span className="stat-label">Всего</span>
+          <span className="stat-label">{t('dashboard.totalComplaints')}</span>
         </div>
         <div className="stat-item" data-aos="flip-up" data-aos-delay="300">
           <span className="stat-value">{stats.new.toLocaleString()}</span>
-          <span className="stat-label">Новые</span>
+          <span className="stat-label">{t('complaints.new')}</span>
         </div>
         <div className="stat-item" data-aos="flip-up" data-aos-delay="400">
           <span className="stat-value">{stats.inProgress.toLocaleString()}</span>
-          <span className="stat-label">В работе</span>
+          <span className="stat-label">{t('complaints.inProgress')}</span>
         </div>
         <div className="stat-item" data-aos="flip-up" data-aos-delay="500">
           <span className="stat-value">{stats.resolved.toLocaleString()}</span>
-          <span className="stat-label">Решенные</span>
+          <span className="stat-label">{t('dashboard.resolvedComplaints')}</span>
         </div>
         <div className="stat-item overdue-stat" data-aos="flip-up" data-aos-delay="600">
           <span className={`stat-value ${stats.overdue > 0 ? 'alert-value' : ''}`}>
             {stats.overdue.toLocaleString()}
           </span>
-          <span className="stat-label">Просроченные</span>
+          <span className="stat-label">{t('complaints.overdueLabel')}</span>
         </div>
       </div>
       
       {error && (
         <div className="error-message" data-aos="fade-in">
-          Ошибка при загрузке данных: {error}
+          {t('complaints.loadError')}: {error}
         </div>
       )}
       
       {loading && complaints.length === 0 ? (
-        <div className="loading-indicator">Загрузка данных...</div>
+        <div className="loading-indicator">{t('complaints.loading')}</div>
       ) : (
         <div className="complaint-list" data-aos="fade-up" data-aos-delay="300">
           {displayedComplaints.length > 0 ? (
@@ -475,13 +560,13 @@ const Complaints = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Обращение</th>
-                  <th>Услуга</th>
-                  <th>Дата</th>
-                  {showOverdue && <th>Дней просрочки</th>}
-                  <th>Приоритет</th>
-                  <th>Статус</th>
-                  <th>Действия</th>
+                  <th>{t('complaints.complaint')}</th>
+                  <th>{t('complaints.service')}</th>
+                  <th>{t('complaints.date')}</th>
+                  {showOverdue && <th>{t('complaints.daysOverdue')}</th>}
+                  <th>{t('complaints.priority')}</th>
+                  <th>{t('complaints.status')}</th>
+                  <th>{t('complaints.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -494,7 +579,7 @@ const Complaints = () => {
                       <td>{complaint.report_text?.substring(0, 40)}{complaint.report_text?.length > 40 ? '...' : ''}</td>
                       <td>{complaint.service}</td>
                       <td>{formatDate(complaint.created_at)}</td>
-                      {showOverdue && <td className="days-overdue">{daysPassed} дн.</td>}
+                      {showOverdue && <td className="days-overdue">{daysPassed} {t('complaints.days')}</td>}
                       <td>
                         <span className={`priority ${getPriorityClass(complaint.importance)}`}>
                           {getPriorityText(complaint.importance)}
@@ -511,7 +596,7 @@ const Complaints = () => {
                             className="btn btn-sm"
                             onClick={() => openComplaintModal(complaint)}
                           >
-                            Просмотр
+                            {t('complaints.view')}
                           </button>
                         </div>
                       </td>
@@ -522,7 +607,7 @@ const Complaints = () => {
             </table>
           ) : (
             <div className="no-data-message">
-              Нет обращений, соответствующих заданным критериям
+              {t('complaints.noData')}
             </div>
           )}
         </div>
@@ -535,7 +620,7 @@ const Complaints = () => {
             onClick={prevPage}
             disabled={currentPage === 1 || loading}
           >
-            Назад
+            {t('pagination.previous')}
           </button>
           <div className="page-numbers">
             {renderPagination().map((page, index) => (
@@ -558,7 +643,7 @@ const Complaints = () => {
             onClick={nextPage}
             disabled={complaints.length < 10 || loading}
           >
-            Вперед
+            {t('pagination.next')}
           </button>
         </div>
       )}

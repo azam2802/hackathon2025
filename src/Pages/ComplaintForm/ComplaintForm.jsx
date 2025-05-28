@@ -169,7 +169,7 @@ const ComplaintForm = () => {
               <Assignment style={{ marginRight: '8px', fontSize: '1.2rem' }} />
               Подать еще одно обращение
             </button>
-            <a href="/landing" className="btn btn-outline">
+            <a href="/" className="btn btn-outline">
               <Home style={{ marginRight: '8px', fontSize: '1.2rem' }} />
               Вернуться на главную
             </a>
@@ -378,7 +378,7 @@ const ComplaintForm = () => {
           >
             {isSubmitting ? 'Отправка...' : 'Отправить обращение'}
           </button>
-          <a href="/landing" className="btn btn-outline">
+          <a href="/" className="btn btn-outline">
             <Home style={{ marginRight: '8px', fontSize: '1.2rem' }} />
             Отмена
           </a>

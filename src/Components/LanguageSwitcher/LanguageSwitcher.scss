@@ -1,0 +1,18 @@
+.language-switcher {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+  
+  // For the login page integration
+  &.auth-header-language {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  // For the layout sidebar integration
+  &.sidebar-language {
+    justify-content: center;
+    margin: 0.75rem 0;
+  }
+} 

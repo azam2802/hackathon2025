@@ -49,7 +49,7 @@ VITE_FIREBASE_APP_ID=1:739844766362:web:3c766417451d430e30fd23
 ### Authentication
 ```javascript
 import { signUpUser, signInUser, signOutUser } from '../firebase/auth';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../Hooks/useAuth';
 
 // In your component
 const { user } = useAuth();

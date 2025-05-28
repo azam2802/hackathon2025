@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { getPendingUsers, approveUser, rejectUser } from '../../firebase/firestore';
 import { signOutUser } from '../../firebase/auth';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../Hooks/useAuth';
 import './AdminPanel.scss';
+import { useTranslation } from 'react-i18next';
 
 const AdminPanel = ({ onBack }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ const AdminPanel = ({ onBack }) => {
       console.log('Loaded pending users:', users);
     } catch (error) {
       console.error('Error loading pending users:', error);
-      setError('Не удалось загрузить ожидающих пользователей. Пожалуйста, попробуйте снова.');
+      setError(t('admin.loadError'));
       // Set empty array to avoid undefined errors
       setPendingUsers([]);
     } finally {
@@ -42,7 +44,7 @@ const AdminPanel = ({ onBack }) => {
       await loadPendingUsers(); // Refresh the list
     } catch (error) {
       console.error('Error approving user:', error);
-      setError('Failed to approve user. Please try again.');
+      setError(t('admin.approveError'));
     } finally {
       setActionLoading(null);
     }
@@ -55,7 +57,7 @@ const AdminPanel = ({ onBack }) => {
       await loadPendingUsers(); // Refresh the list
     } catch (error) {
       console.error('Error rejecting user:', error);
-      setError('Failed to reject user. Please try again.');
+      setError(t('admin.rejectError'));
     } finally {
       setActionLoading(null);
     }
@@ -76,21 +78,21 @@ const AdminPanel = ({ onBack }) => {
           <div className="admin-header-left">
             {onBack && (
               <button onClick={onBack} className="back-btn">
-                ← Back to Website
+                ← {t('admin.backToWebsite')}
               </button>
             )}
-            <h1>Админ панель</h1>
+            <h1>{t('admin.title')}</h1>
           </div>
           <div className="admin-info">
-            <span>Добро пожаловать, {user?.email}</span>
+            <span>{t('admin.welcome')}, {user?.email}</span>
             <button onClick={handleLogout} className="logout-btn">
-              Выйти из аккаунта
+              {t('navigation.logout')}
             </button>
           </div>
         </div>
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Загрузка...</p>
+          <p>{t('admin.loading')}</p>
         </div>
       </div>
     );
@@ -102,15 +104,15 @@ const AdminPanel = ({ onBack }) => {
         <div className="admin-header-left">
           {onBack && (
             <button onClick={onBack} className="back-btn">
-              ← Назад
+              ← {t('admin.back')}
             </button>
           )}
-          <h1>Админ панель</h1>
+          <h1>{t('admin.title')}</h1>
         </div>
         <div className="admin-info">
-          <span>Добро пожаловать, {user?.email}</span>
+          <span>{t('admin.welcome')}, {user?.email}</span>
           <button onClick={handleLogout} className="logout-btn">
-            Выйти из аккаунта
+            {t('navigation.logout')}
           </button>
         </div>
       </div>
@@ -122,33 +124,33 @@ const AdminPanel = ({ onBack }) => {
             <p>{error}</p>
           </div>
           <div className="error-actions">
-            <button onClick={() => setError(null)} className="dismiss-btn">Скрыть</button>
-            <button onClick={loadPendingUsers} className="retry-btn">Повторить</button>
+            <button onClick={() => setError(null)} className="dismiss-btn">{t('admin.hide')}</button>
+            <button onClick={loadPendingUsers} className="retry-btn">{t('admin.retry')}</button>
           </div>
         </div>
       )}
 
       <div className="pending-users-section">
-        <h2>Пользователи ожидающие подтверждения ({pendingUsers.length})</h2>
+        <h2>{t('admin.pendingUsers')} ({pendingUsers.length})</h2>
         
         {pendingUsers.length === 0 ? (
           <div className="no-pending">
-            <p>Нет пользователей ожидающих подтверждения.</p>
+            <p>{t('admin.noPendingUsers')}</p>
           </div>
         ) : (
           <div className="users-list">
             {pendingUsers.map((pendingUser) => (
               <div key={pendingUser.id} className="user-card">
                 <div className="user-info">
-                  <h3>{pendingUser.displayName || 'User'}</h3>
+                  <h3>{pendingUser.displayName || t('admin.user')}</h3>
                   <p className="email">{pendingUser.email}</p>
                   <p className="created">
-                    Зарагестрированные: {
+                    {t('admin.registered')}: {
                       pendingUser.createdAt && typeof pendingUser.createdAt.toDate === 'function'
                         ? pendingUser.createdAt.toDate().toLocaleDateString()
                         : pendingUser.createdAt instanceof Date
                           ? pendingUser.createdAt.toLocaleDateString()
-                          : 'Unknown'
+                          : t('admin.unknown')
                     }
                   </p>
                 </div>
@@ -159,7 +161,7 @@ const AdminPanel = ({ onBack }) => {
                     disabled={actionLoading === pendingUser.id}
                     className="approve-btn"
                   >
-                    {actionLoading === pendingUser.id ? 'Approving...' : 'Approve'}
+                    {actionLoading === pendingUser.id ? t('admin.approving') : t('admin.approve')}
                   </button>
                   
                   <button
@@ -167,7 +169,7 @@ const AdminPanel = ({ onBack }) => {
                     disabled={actionLoading === pendingUser.id}
                     className="reject-btn"
                   >
-                    {actionLoading === pendingUser.id ? 'Rejecting...' : 'Reject'}
+                    {actionLoading === pendingUser.id ? t('admin.rejecting') : t('admin.reject')}
                   </button>
                 </div>
               </div>
@@ -180,7 +182,7 @@ const AdminPanel = ({ onBack }) => {
         <div className="refresh-info">
           {lastUpdated && (
             <span className="last-updated">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+              {t('admin.lastUpdated')}: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
         </div>
@@ -189,7 +191,7 @@ const AdminPanel = ({ onBack }) => {
           className="refresh-btn"
           disabled={loading}
         >
-          {loading ? 'Refreshing...' : 'Refresh List'}
+          {loading ? t('admin.refreshing') : t('admin.refreshList')}
         </button>
       </div>
     </div>
