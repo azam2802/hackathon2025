@@ -52,7 +52,7 @@ const Landing = () => {
               {t('landing.heroDescription')}
             </p>
             <div className="hero-actions">
-              <a href="/admin/complaints" className="btn btn-primary">
+              <a href="/complaint-form" className="btn btn-primary">
                 <span className="btn-icon">📝</span>
                 {t('landing.heroButtonComplaint')}
               </a>

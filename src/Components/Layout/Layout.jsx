@@ -5,18 +5,19 @@ import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
 import { useAuth } from '../../Hooks/useAuth'
 import { signOutUser, isSuperAdmin } from '../../firebase/auth'
 import AdminPanel from '../Admin/AdminPanel'
-import { Assignment, Search, BarChart, Analytics, Logout, Speed } from '@mui/icons-material'
+import { Assignment, Search, BarChart, Analytics, Logout, Speed, AdminPanelSettings } from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher'
+import { Menu } from '@mui/material'
 
 const Layout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!loading && !user) {
       navigate('/login');
     }
@@ -29,6 +30,14 @@ const Layout = () => {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   // Show admin panel for superadmin only if they chose to view it
@@ -89,7 +98,30 @@ const Layout = () => {
   return (
     <div className="app-layout">
       <ParticlesBackground />
-      <div className="sidebar">
+      
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <button className="mobile-burger" onClick={toggleMobileMenu}>
+          <Menu />
+        </button>
+        <div className="mobile-logo">
+          <img src="/logo-gov.svg" alt="PublicPulse" />
+          <span>PublicPulse</span>
+        </div>
+        <div className="mobile-user">
+          <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
+          <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      <div 
+        className={`sidebar-overlay ${isMobileMenuOpen ? 'active' : ''}`}
+        onClick={closeMobileMenu}
+      ></div>
+
+      {/* Sidebar */}
+      <div className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
           <img src="/logo-gov.svg" alt="Public Pulse" />
           <span>Public Pulse</span>
@@ -114,8 +146,13 @@ const Layout = () => {
             <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
           </div>
           {isSuperAdmin(user?.email) && (
-            <button onClick={() => setShowAdminPanel(true)} className="admin-panel-button">
-              Админ панель
+            <button 
+              onClick={() => setShowAdminPanel(true)} 
+              className="admin-panel-button"
+              aria-label="Открыть админ панель"
+            >
+              <AdminPanelSettings className="sidebar-icon" />
+              <span>Админ панель</span>
             </button>
           )}
           <div className="language-switcher sidebar-language">
@@ -127,6 +164,7 @@ const Layout = () => {
           </button>
         </div>
       </div>
+
       <div className="main-layout-content">
         <main className="main-content">
           <div className="container">
