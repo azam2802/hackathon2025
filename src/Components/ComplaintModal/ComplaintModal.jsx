@@ -5,8 +5,8 @@ import { db } from "../../firebase/config";
 import "./ComplaintModal.scss";
 import { useTranslation } from "react-i18next";
 
-// const API_URL = "https://publicpulse-back-739844766362.asia-southeast2.run.app"
-const API_URL = "http://localhost:8000"
+const API_URL = "https://publicpulse-back-739844766362.asia-southeast2.run.app"
+// const API_URL = "http://localhost:8000"
 
 // Функция для парсинга даты из разных форматов
 const parseDate = (dateString) => {
