@@ -13,7 +13,7 @@ ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", 0))
 # Initialize Google Maps client if API key is provided
 
 # Django Backend API Configuration
-API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://publicpulse-back-739844766362.asia-southeast2.run.app")
 API_KEY = os.getenv("API_KEY", "")
 API_ENABLED = os.getenv("API_ENABLED", "true").lower() == "true"
 

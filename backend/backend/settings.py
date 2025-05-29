@@ -11,7 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 from .firebase_config import initialize_firebase
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 # Initialize Firebase (optional)
 FIREBASE_ENABLED = initialize_firebase() is not None
@@ -29,7 +34,7 @@ SECRET_KEY = "django-insecure-_fgrln@xm^^p1%xw$2(!z=^)zyu3^gm7hld12i7^f0%aomzzwn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -133,6 +138,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",
+    "https://publicpulse-front-739844766362.asia-southeast2.run.app"
 ]
 
 CORS_ALLOW_METHODS = [
@@ -155,3 +161,12 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@publicpulse.kg')

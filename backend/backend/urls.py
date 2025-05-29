@@ -17,7 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from analyze.views import HelloWorld, ReportSubmissionView
+from analyze.views import HelloWorld, ReportSubmissionView, StatusUpdateEmailView
+from analyze.webhook_views import FirestoreWebhookView, SyncComplaintView
 from .geocoding import geocode_location
 
 urlpatterns = [
@@ -25,4 +26,7 @@ urlpatterns = [
     path("api/hello/", HelloWorld.as_view(), name="hello"),
     path("api/reports/", ReportSubmissionView.as_view(), name="submit_report"),
     path("api/geocode/", geocode_location, name="geocode"),
+    path("api/send-status-email/", StatusUpdateEmailView.as_view(), name="send_status_email"),
+    path("api/firestore-webhook/", FirestoreWebhookView.as_view(), name="firestore_webhook"),
+    path("api/sync-complaint/", SyncComplaintView.as_view(), name="sync_complaint"),
 ]

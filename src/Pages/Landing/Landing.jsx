@@ -11,6 +11,7 @@ const Landing = () => {
   const { t } = useTranslation();
   const phoneRef = useRef(null);
   const [tiltStyle, setTiltStyle] = useState({});
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Handle mouse move for tilt effect
   const handleMouseMove = (e) => {
@@ -45,6 +46,10 @@ const Landing = () => {
     });
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
     <div className="landing-root">
       <header className="landing-header">
@@ -56,7 +61,10 @@ const Landing = () => {
               <span className="logo-subtext">{t('landing.governmentPortal')}</span>
             </div>
           </div>
-          <nav className="landing-nav">
+          <button className="mobile-menu-button" onClick={toggleMobileMenu}>
+            <span className={`burger-icon ${isMobileMenuOpen ? 'open' : ''}`}></span>
+          </button>
+          <nav className={`landing-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <a href="#about">{t('landing.menuAbout')}</a>
             <a href="#features">{t('landing.menuFeatures')}</a>
             <a href="#process">{t('landing.menuProcess')}</a>

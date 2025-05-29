@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, query, where, orderBy, limit, startAfter, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAnalyticsStore } from '../Store/store';
 
@@ -21,7 +21,7 @@ const parseDate = (dateString) => {
             parsedDate = new Date(year, month - 1, day);
         }
     } 
-    // Проверяем формат даты "dd-MM-YYYY"
+    // Проверяем формат даты "dd-MM-YYYY" или "YYYY-MM-DD"
     else if (dateString.includes('-')) {
         // Проверяем, не является ли это ISO форматом (YYYY-MM-DD)
         const parts = dateString.split('-');
@@ -58,7 +58,9 @@ export const useFetchComplaints = () => {
     // Get selected region from analytics store
     const { selectedRegion } = useAnalyticsStore();
     
-    const [complaints, setComplaints] = useState([]);
+    const [allComplaints, setAllComplaints] = useState([]);
+    const [filteredComplaints, setFilteredComplaints] = useState([]);
+    const [displayedComplaints, setDisplayedComplaints] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [stats, setStats] = useState({
@@ -70,8 +72,7 @@ export const useFetchComplaints = () => {
         overdueList: []
     });
     
-    // Пагинация и фильтрация
-    const [lastVisible, setLastVisible] = useState(null);
+    // Клиентская пагинация и фильтрация
     const [filters, setFilters] = useState({
         status: '',
         agency: '',
@@ -80,7 +81,7 @@ export const useFetchComplaints = () => {
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const itemsPerPage = 10;
+    const ITEMS_PER_PAGE = 10; // Количество элементов на странице
     
     // Кэширование данных
     const [cachedComplaints, setCachedComplaints] = useState({});
@@ -94,9 +95,9 @@ export const useFetchComplaints = () => {
         return (Date.now() - cachedTimestamp[cacheKey]) < fiveMinutes;
     }, [cachedTimestamp]);
     
-    // Создание ключа для кэша на основе фильтров, региона и страницы
-    const getCacheKey = (filters, page, region) => {
-        return `${filters.status || 'all'}_${filters.agency || 'all'}_${filters.importance || 'all'}_${filters.searchTerm || 'none'}_${region || 'all'}_page${page}`;
+    // Создание ключа для кэша на основе региона
+    const getCacheKey = (region) => {
+        return `all_complaints_${region || 'all'}`;
     };
     
     // Функция для подсчета статистики
@@ -152,40 +153,22 @@ export const useFetchComplaints = () => {
         });
     };
     
-    // Основная функция для получения обращений
-    const fetchComplaints = useCallback(async (resetPagination = false, skipCache = false) => {
+    // Основная функция для получения всех обращений
+    const fetchAllComplaints = useCallback(async (skipCache = false) => {
         try {
-            // Если сбрасываем пагинацию, то начинаем с первой страницы
-            const targetPage = resetPagination ? 1 : currentPage;
+            const cacheKey = getCacheKey(selectedRegion);
             
             // Проверяем кэш, если не нужно принудительно обновлять
-            const cacheKey = getCacheKey(filters, targetPage, selectedRegion);
             if (!skipCache && isCacheValid(cacheKey) && cachedComplaints[cacheKey]) {
                 // Используем кэшированные данные
-                if (resetPagination) {
-                    setComplaints(cachedComplaints[cacheKey]);
-                } else {
-                    setComplaints(prev => [...prev, ...cachedComplaints[cacheKey]]);
-                }
-                
-                // Обновляем пагинацию, если нужно
-                if (resetPagination) {
-                    setCurrentPage(1);
-                    setLastVisible(null);
-                }
-                
+                setAllComplaints(cachedComplaints[cacheKey]);
+                calculateStats(cachedComplaints[cacheKey]);
                 return;
             }
             
             setLoading(true);
             
-            // Если сбрасываем пагинацию, то начинаем с первой страницы
-            if (resetPagination) {
-                setLastVisible(null);
-                setCurrentPage(1);
-            }
-            
-            // Строим запрос с учетом фильтров
+            // Строим запрос с учетом только региона
             let complaintsQuery = collection(db, 'reports');
             let queryConstraints = [];
             
@@ -194,58 +177,14 @@ export const useFetchComplaints = () => {
                 queryConstraints.push(where('region', '==', selectedRegion));
             }
             
-            // Добавляем фильтры, если они заданы
-            if (filters.status) {
-                queryConstraints.push(where('status', '==', filters.status));
-            }
-            
-            if (filters.agency) {
-                queryConstraints.push(where('agency', '==', filters.agency));
-            }
-            
-            if (filters.importance) {
-                queryConstraints.push(where('importance', '==', filters.importance));
-            }
-            
             // Добавляем сортировку по дате (сначала новые)
             queryConstraints.push(orderBy('created_at', 'desc'));
-            
-            // Учитываем пагинацию
-            if (lastVisible && !resetPagination) {
-                queryConstraints.push(startAfter(lastVisible));
-            }
-            
-            // Ограничиваем количество результатов
-            queryConstraints.push(limit(itemsPerPage));
             
             // Формируем итоговый запрос
             const finalQuery = query(complaintsQuery, ...queryConstraints);
             
-            // Сначала получаем общее количество документов для пагинации
-            if (resetPagination) {
-                // Для подсчета общего количества документов исключаем limit и startAfter
-                const countQuery = query(
-                    complaintsQuery, 
-                    ...queryConstraints.filter(constraint => 
-                        !constraint.toString().includes('limit') && 
-                        !constraint.toString().includes('startAfter')
-                    )
-                );
-                
-                const countSnapshot = await getCountFromServer(countQuery);
-                const totalCount = countSnapshot.data().count;
-                setTotalPages(Math.ceil(totalCount / itemsPerPage) || 1);
-            }
-            
             // Выполняем запрос
             const querySnapshot = await getDocs(finalQuery);
-            
-            // Если запрос пустой и это не первая страница, пробуем вернуться на предыдущую
-            if (querySnapshot.empty && currentPage > 1) {
-                setCurrentPage(prev => prev - 1);
-                setLastVisible(null);
-                return;
-            }
             
             // Обрабатываем результаты
             const fetchedComplaints = [];
@@ -256,10 +195,6 @@ export const useFetchComplaints = () => {
                     ...doc.data()
                 });
             });
-            
-            // Запоминаем последний видимый документ для пагинации
-            const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-            setLastVisible(lastDoc || null);
             
             // Кэшируем полученные данные
             setCachedComplaints(prev => ({
@@ -272,109 +207,11 @@ export const useFetchComplaints = () => {
                 [cacheKey]: Date.now()
             }));
             
-            // Если это новый запрос (не пагинация), обновляем полностью
-            // Иначе добавляем к существующим
-            if (resetPagination) {
-                setComplaints(fetchedComplaints);
-            } else {
-                setComplaints(prev => [...prev, ...fetchedComplaints]);
-            }
+            // Обновляем состояние с полученными данными
+            setAllComplaints(fetchedComplaints);
             
-            // Поисковая фильтрация на клиенте, если указан searchTerm
-            if (filters.searchTerm && fetchedComplaints.length > 0) {
-                const searchLower = filters.searchTerm.toLowerCase();
-                
-                // Проверяем, является ли поисковый запрос датой
-                const isDateSearch = searchLower.match(/^\d{1,2}[.-]\d{1,2}[.-]\d{4}$/) || 
-                                    searchLower.match(/^\d{1,2}[.-]\d{1,2}[.-]\d{2}$/);
-                
-                const searchDate = isDateSearch ? parseDate(searchLower) : null;
-                
-                const filteredComplaints = fetchedComplaints.filter(complaint => {
-                    // Если это поиск по дате
-                    if (searchDate && complaint.created_at) {
-                        const complaintDate = parseDate(complaint.created_at);
-                        if (complaintDate) {
-                            // Сравниваем только день, месяц и год
-                            return complaintDate.getDate() === searchDate.getDate() &&
-                                   complaintDate.getMonth() === searchDate.getMonth() &&
-                                   complaintDate.getFullYear() === searchDate.getFullYear();
-                        }
-                    }
-                    
-                    // Поиск по тексту обращения
-                    if (complaint.report_text && complaint.report_text.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    // Поиск по услуге
-                    if (complaint.service && complaint.service.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    // Поиск по контактной информации
-                    if (complaint.contact_info && complaint.contact_info.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    // Поиск по ID
-                    if (complaint.id && complaint.id.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    // Поиск по адресу
-                    if (complaint.address && complaint.address.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    // Поиск по региону
-                    if (complaint.region && complaint.region.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    // Поиск по городу
-                    if (complaint.city && complaint.city.toLowerCase().includes(searchLower)) {
-                        return true;
-                    }
-                    
-                    return false;
-                });
-                
-                if (resetPagination) {
-                    setComplaints(filteredComplaints);
-                } else {
-                    setComplaints(prev => {
-                        // Убираем возможные дубликаты
-                        const existingIds = new Set(prev.map(c => c.id));
-                        const newItems = filteredComplaints.filter(c => !existingIds.has(c.id));
-                        return [...prev, ...newItems];
-                    });
-                }
-            }
-            
-            // Обновляем статистику (отдельный запрос для полной статистики)
-            // Делаем только при полной перезагрузке для оптимизации
-            if (resetPagination) {
-                // Build stats query with region filter if selected
-                let statsQuery = collection(db, 'reports');
-                
-                // Apply region filter if a specific region is selected
-                if (selectedRegion && selectedRegion !== 'all') {
-                    statsQuery = query(statsQuery, where('region', '==', selectedRegion));
-                }
-                
-                const statsSnapshot = await getDocs(statsQuery);
-                const allComplaints = [];
-                
-                statsSnapshot.forEach((doc) => {
-                    allComplaints.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-                
-                calculateStats(allComplaints);
-            }
+            // Обновляем статистику
+            calculateStats(fetchedComplaints);
             
             setError(null);
         } catch (err) {
@@ -383,56 +220,165 @@ export const useFetchComplaints = () => {
         } finally {
             setLoading(false);
         }
-    }, [filters, lastVisible, currentPage, cachedComplaints, selectedRegion, isCacheValid]);
+    }, [selectedRegion, cachedComplaints, isCacheValid]);
+    
+    // Применение фильтров к полученным данным
+    const applyFilters = useCallback(() => {
+        if (allComplaints.length === 0) return;
+        
+        let filtered = [...allComplaints];
+        
+        // Применяем фильтр по статусу
+        if (filters.status) {
+            filtered = filtered.filter(item => item.status === filters.status);
+        }
+        
+        // Применяем фильтр по ведомству
+        if (filters.agency) {
+            filtered = filtered.filter(item => item.agency === filters.agency);
+        }
+        
+        // Применяем фильтр по важности
+        if (filters.importance) {
+            filtered = filtered.filter(item => item.importance === filters.importance);
+        }
+        
+        // Применяем поиск
+        if (filters.searchTerm) {
+            const searchLower = filters.searchTerm.toLowerCase();
+            
+            // Проверяем, является ли поисковый запрос датой
+            const isDateSearch = searchLower.match(/^\d{1,2}[.-]\d{1,2}[.-]\d{4}$/) || 
+                                searchLower.match(/^\d{1,2}[.-]\d{1,2}[.-]\d{2}$/);
+            
+            const searchDate = isDateSearch ? parseDate(searchLower) : null;
+            
+            filtered = filtered.filter(complaint => {
+                // Если это поиск по дате
+                if (searchDate && complaint.created_at) {
+                    const complaintDate = parseDate(complaint.created_at);
+                    if (complaintDate) {
+                        // Сравниваем только день, месяц и год
+                        return complaintDate.getDate() === searchDate.getDate() &&
+                               complaintDate.getMonth() === searchDate.getMonth() &&
+                               complaintDate.getFullYear() === searchDate.getFullYear();
+                    }
+                }
+                
+                // Поиск по тексту обращения
+                if (complaint.report_text && complaint.report_text.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                // Поиск по услуге
+                if (complaint.service && complaint.service.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                // Поиск по контактной информации
+                if (complaint.contact_info && complaint.contact_info.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                // Поиск по ID
+                if (complaint.id && complaint.id.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                // Поиск по адресу
+                if (complaint.address && complaint.address.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                // Поиск по региону
+                if (complaint.region && complaint.region.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                // Поиск по городу
+                if (complaint.city && complaint.city.toLowerCase().includes(searchLower)) {
+                    return true;
+                }
+                
+                return false;
+            });
+        }
+        
+        // Обновляем отфильтрованные данные
+        setFilteredComplaints(filtered);
+        
+        // Рассчитываем общее количество страниц
+        const totalPageCount = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+        setTotalPages(totalPageCount || 1);
+        
+        // Если текущая страница больше общего количества страниц, сбрасываем на первую
+        if (currentPage > totalPageCount) {
+            setCurrentPage(1);
+        }
+    }, [allComplaints, filters, currentPage]);
+    
+    // Применение пагинации к отфильтрованным данным
+    const applyPagination = useCallback(() => {
+        if (filteredComplaints.length === 0) {
+            setDisplayedComplaints([]);
+            return;
+        }
+        
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        
+        // Получаем данные для текущей страницы
+        const paginatedData = filteredComplaints.slice(startIndex, endIndex);
+        setDisplayedComplaints(paginatedData);
+    }, [filteredComplaints, currentPage]);
     
     // Обработчик изменения фильтров
-    const handleFilterChange = (newFilters) => {
+    const handleFilterChange = useCallback((newFilters) => {
         setFilters(prev => ({
             ...prev,
             ...newFilters
         }));
-    };
+        
+        // Сбрасываем пагинацию на первую страницу при изменении фильтров
+        setCurrentPage(1);
+    }, []);
     
     // Пагинация
-    const nextPage = () => {
-        setCurrentPage(prev => prev + 1);
-    };
+    const nextPage = useCallback(() => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+        }
+    }, [currentPage, totalPages]);
     
-    const prevPage = () => {
+    const prevPage = useCallback(() => {
         if (currentPage > 1) {
             setCurrentPage(prev => prev - 1);
-            setLastVisible(null); // Сбрасываем для повторного запроса
         }
-    };
+    }, [currentPage]);
     
-    const goToPage = (page) => {
-        if (page !== currentPage) {
+    const goToPage = useCallback((page) => {
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
             setCurrentPage(page);
-            setLastVisible(null); // Сбрасываем для повторного запроса
         }
-    };
+    }, [currentPage, totalPages]);
     
-    // Загружаем данные при монтировании или изменении фильтров
+    // Загружаем данные при монтировании компонента
     useEffect(() => {
-        fetchComplaints(true);
-    }, [fetchComplaints, filters]);
+        fetchAllComplaints();
+    }, [fetchAllComplaints, selectedRegion]);
     
-    // Загружаем данные при изменении региона
+    // Применяем фильтры при изменении данных или фильтров
     useEffect(() => {
-        fetchComplaints(true);
-    }, [fetchComplaints, selectedRegion]);
+        applyFilters();
+    }, [applyFilters, allComplaints, filters]);
     
-    // Загружаем данные при пагинации
+    // Применяем пагинацию при изменении отфильтрованных данных или страницы
     useEffect(() => {
-        // Если не первая страница и нет lastVisible, значит мы переходим
-        // на страницу, которую еще не загружали
-        if (currentPage > 1 && !lastVisible) {
-            fetchComplaints(false);
-        }
-    }, [currentPage, lastVisible, fetchComplaints]);
+        applyPagination();
+    }, [applyPagination, filteredComplaints, currentPage]);
     
     return {
-        complaints,
+        complaints: displayedComplaints,
         loading,
         error,
         stats,
@@ -443,6 +389,6 @@ export const useFetchComplaints = () => {
         nextPage,
         prevPage,
         goToPage,
-        refreshData: () => fetchComplaints(true, true) // Принудительное обновление с пропуском кэша
+        refreshData: () => fetchAllComplaints(true) // Принудительное обновление с пропуском кэша
     };
 }; 

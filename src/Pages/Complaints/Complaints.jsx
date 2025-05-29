@@ -306,7 +306,9 @@ const Complaints = () => {
         pageNumbers.push('...');
       }
       
-      pageNumbers.push(totalPages);
+      if (totalPages > 1) {
+        pageNumbers.push(totalPages);
+      }
     }
     
     return pageNumbers;
@@ -551,7 +553,7 @@ const Complaints = () => {
         </div>
       )}
       
-      {loading && complaints.length === 0 ? (
+      {loading && displayedComplaints.length === 0 ? (
         <div className="loading-indicator">{t('complaints.loading')}</div>
       ) : (
         <div className="complaint-list" data-aos="fade-up" data-aos-delay="300">
@@ -613,7 +615,7 @@ const Complaints = () => {
         </div>
       )}
       
-      {!showOverdue && complaints.length > 0 && (
+      {!showOverdue && complaints.length > 0 && totalPages > 1 && (
         <div className="pagination" data-aos="fade-up" data-aos-delay="600">
           <button 
             className="btn btn-sm btn-outline" 
@@ -641,7 +643,7 @@ const Complaints = () => {
           <button 
             className="btn btn-sm btn-outline" 
             onClick={nextPage}
-            disabled={complaints.length < 10 || loading}
+            disabled={currentPage >= totalPages || loading}
           >
             {t('pagination.next')}
           </button>

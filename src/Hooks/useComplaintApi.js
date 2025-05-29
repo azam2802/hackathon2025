@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = 'https://publicpulse-back-739844766362.asia-southeast2.run.app/'
 
 export const useComplaintApi = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +65,32 @@ const geocodeResponse = await fetch(`${API_BASE_URL}/api/geocode/?${query}`, {
       }
 
       const data = await response.json();
+      
+      // Отправляем приветственное email уведомление для website submissions
+      try {
+        const emailResponse = await fetch(`${API_BASE_URL}/api/send-status-email/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            complaint_id: complaintData.id,
+            status: 'pending',
+            notes: '',
+            language: complaintData.language || 'ru'
+          }),
+        });
+        
+        if (!emailResponse.ok) {
+          console.error('Failed to send welcome email notification:', await emailResponse.text());
+        } else {
+          console.log('Welcome email notification sent successfully');
+        }
+      } catch (emailError) {
+        console.error('Error sending welcome email notification:', emailError);
+        // Don't throw error here, as the complaint was successfully submitted
+      }
+      
       return data;
 
     } catch (err) {
