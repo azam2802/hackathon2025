@@ -150,8 +150,8 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
             }
           }
           
-          // Отправляем уведомление по email для website submissions
-          if (complaint.submission_source === 'website') {
+          // Отправляем уведомление по email для website и mobile submissions
+          if (complaint.submission_source === 'website' || complaint.submission_source === 'mobile') {
             try {
               const response = await fetch(`${API_URL}/api/send-status-email/`, {
                 method: 'POST',

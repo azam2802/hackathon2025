@@ -68,11 +68,11 @@ class StatusUpdateEmailView(APIView):
             complaint_data = complaint_doc.to_dict()
             complaint_data['id'] = complaint_id
             
-            # Check if this is a website submission
+            # Check if this is a website or mobile submission
             submission_source = complaint_data.get('submission_source', '')
-            if submission_source != 'website':
+            if submission_source not in ['website', 'mobile']:
                 return Response(
-                    {"message": "Email notification skipped - not a website submission"},
+                    {"message": "Email notification skipped - not a website or mobile submission"},
                     status=status.HTTP_200_OK
                 )
             

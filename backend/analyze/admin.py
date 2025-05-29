@@ -227,7 +227,7 @@ class ComplaintAdmin(admin.ModelAdmin):
         """Send email notifications for selected complaints"""
         sent = 0
         for complaint in queryset:
-            if complaint.submission_source == 'website' and complaint.email:
+            if complaint.submission_source in ['website', 'mobile'] and complaint.email:
                 try:
                     complaint.send_status_update_email()
                     sent += 1
