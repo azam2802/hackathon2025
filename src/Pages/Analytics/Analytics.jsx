@@ -528,6 +528,12 @@ const Analytics = () => {
               <span className="detail-label">Дата создания:</span>
               <span className="detail-value">{report.created_at}</span>
             </div>
+            {report.photo_url && (
+              <div className="detail-row">
+                <span className="detail-label">Фото:</span>
+                <img src={report.photo_url} alt={t('complaints.complaintPhoto')} style={{ width: '100px', height: 'auto' }} />
+              </div>
+            )}
             
             {report.resolved_at && (
               <div className="detail-row">
