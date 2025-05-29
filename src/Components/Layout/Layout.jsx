@@ -1,14 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import './Layout.scss'
-import ParticlesBackground from '../ParticlesBackground/ParticlesBackground'
-import { useAuth } from '../../Hooks/useAuth'
-import { signOutUser, isSuperAdmin } from '../../firebase/auth'
-import AdminPanel from '../Admin/AdminPanel'
-import { Assignment, Search, BarChart, Analytics, Logout, Speed, AdminPanelSettings } from '@mui/icons-material'
-import { useTranslation } from 'react-i18next'
-import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher'
-import { Menu } from '@mui/material'
+import React, { useState, useEffect } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import "./Layout.scss";
+import ParticlesBackground from "../ParticlesBackground/ParticlesBackground";
+import { useAuth } from "../../Hooks/useAuth";
+import { signOutUser, isSuperAdmin } from "../../firebase/auth";
+import AdminPanel from "../Admin/AdminPanel";
+import {
+  Assignment,
+  Search,
+  BarChart,
+  Analytics,
+  Logout,
+  Speed,
+  AdminPanelSettings,
+} from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
+import { Menu } from "@mui/material";
 
 const Layout = () => {
   const { user, loading } = useAuth();
@@ -19,16 +27,16 @@ const Layout = () => {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [user, loading, navigate]);
 
   const handleLogout = async () => {
     try {
       await signOutUser();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -58,16 +66,16 @@ const Layout = () => {
 
   // If user is logged in but not approved (and not superadmin), show pending approval message
   if (user && !isSuperAdmin(user.email) && user.isApproved === false) {
-    console.log('User is pending approval:', user);
+    console.log("User is pending approval:", user);
     return (
       <div className="app-layout auth-only-layout">
         <ParticlesBackground className="fixed-particles" />
-        
+
         <div className="auth-container">
           <div className="auth-header">
             <div className="logo">
               <img src="/logo-gov.svg" alt="Public Pulse" />
-              <span>Public Pulse</span>
+            <span>Public Pulse</span>
             </div>
             <h1>Ожидание одобрения</h1>
             <p>Ваш аккаунт находится на рассмотрении</p>
@@ -80,11 +88,16 @@ const Layout = () => {
               </div>
               <h3>Добро пожаловать, {user.displayName || user.email}!</h3>
               <p>Ваша регистрация была успешно завершена.</p>
-              <p>Пожалуйста, ожидайте одобрения администратора для доступа к системе.</p>
-              <p className="status-note">Ваш запрос находится на рассмотрении.</p>
+              <p>
+                Пожалуйста, ожидайте одобрения администратора для доступа к
+                системе.
+              </p>
+              <p className="status-note">
+                Ваш запрос находится на рассмотрении.
+              </p>
               <div className="pending-actions">
                 <button onClick={handleLogout} className="logout-btn">
-                  {t('navigation.logout')}
+                  {t("navigation.logout")}
                 </button>
               </div>
             </div>
@@ -98,7 +111,7 @@ const Layout = () => {
   return (
     <div className="app-layout">
       <ParticlesBackground />
-      
+
       {/* Mobile Header */}
       <div className="mobile-header">
         <button className="mobile-burger" onClick={toggleMobileMenu}>
@@ -109,50 +122,72 @@ const Layout = () => {
           <span>PublicPulse</span>
         </div>
         <div className="mobile-user">
-          <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
-          <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
+          <img
+            src="/avatar-placeholder.svg"
+            alt="User"
+            className="user-avatar"
+          />
+          <span className="username">
+            {user?.displayName || user?.email || "Пользователь"}
+          </span>
         </div>
       </div>
 
       {/* Mobile Overlay */}
-      <div 
-        className={`sidebar-overlay ${isMobileMenuOpen ? 'active' : ''}`}
+      <div
+        className={`sidebar-overlay ${isMobileMenuOpen ? "active" : ""}`}
         onClick={closeMobileMenu}
       ></div>
 
       {/* Sidebar */}
-      <div className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+      <div className={`sidebar ${isMobileMenuOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
           <img src="/logo-gov.svg" alt="Public Pulse" />
           <span>Public Pulse</span>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/admin/dashboard" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink
+            to="/admin/dashboard"
+            end
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
             <Speed className="sidebar-icon" />
-            <span>{t('navigation.dashboard')}</span>
+            <span>{t("navigation.dashboard")}</span>
           </NavLink>
-          <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink
+            to="/admin/complaints"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
             <Assignment className="sidebar-icon" />
-            <span>{t('navigation.complaints')}</span>
+            <span>{t("navigation.complaints")}</span>
           </NavLink>
-          <NavLink to="/admin/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
+          <NavLink
+            to="/admin/analytics"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
             <Analytics className="sidebar-icon" />
-            <span>{t('navigation.analytics')}</span>
+            <span>{t("navigation.analytics")}</span>
           </NavLink>
         </nav>
         <div className="sidebar-footer">
           <div className="sidebar-user">
-            <img src="/avatar-placeholder.svg" alt="User" className="user-avatar" />
-            <span className="username">{user?.displayName || user?.email || 'Пользователь'}</span>
+            <img
+              src="/avatar-placeholder.svg"
+              alt="User"
+              className="user-avatar"
+            />
+            <span className="username">
+              {user?.displayName || user?.email || "Пользователь"}
+            </span>
           </div>
           {isSuperAdmin(user?.email) && (
-            <button 
-              onClick={() => setShowAdminPanel(true)} 
+            <button
+              onClick={() => setShowAdminPanel(true)}
               className="admin-panel-button"
               aria-label="Открыть админ панель"
             >
               <AdminPanelSettings className="sidebar-icon" />
-              <span>{t('admin.title')}</span>
+              <span>{t("admin.title")}</span>
             </button>
           )}
           <div className="language-switcher sidebar-language">
@@ -160,7 +195,7 @@ const Layout = () => {
           </div>
           <button onClick={handleLogout} className="logout-button">
             <Logout className="sidebar-icon" />
-            <span>{t('navigation.logout')}</span>
+            <span>{t("navigation.logout")}</span>
           </button>
         </div>
       </div>
@@ -173,12 +208,14 @@ const Layout = () => {
         </main>
         <footer className="footer">
           <div className="container">
-            <p>&copy; {new Date().getFullYear()} - {t('app.title')}</p>
+            <p>
+              &copy; {new Date().getFullYear()} - {t("app.title")}
+            </p>
           </div>
         </footer>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

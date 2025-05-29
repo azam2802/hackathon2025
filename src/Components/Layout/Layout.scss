@@ -653,6 +653,11 @@ $glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         justify-content: center;
         margin-bottom: 2rem;
         
+        @media (max-width: 768px) {
+          flex-direction: column;
+          margin-bottom: 0;
+        }
+        
         img {
           width: 60px;
           height: 60px;
