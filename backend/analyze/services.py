@@ -60,7 +60,7 @@ def analyze_report_text(report_text):
     {agencies_list}
 
     Return ONLY a JSON object in this exact format:
-    {{"service": "specific service or issue being complained about", "agency": "exact agency name from list", "importance": "low, medium, high"}}
+    {{"service": "specific service the persons issue is related to, dont use issue as service name", "agency": "exact agency name from list", "importance": "low, medium, high"}}
     
     if you deem the report text does not belong to any of the agencies, or does not contain any relevant information, return:
     {{"service": "Spam", "agency": "Spam", "importance": "low"}}
