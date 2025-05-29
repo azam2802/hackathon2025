@@ -5,8 +5,13 @@ import { db } from "../../firebase/config";
 import "./ComplaintModal.scss";
 import { useTranslation } from "react-i18next";
 
+// const API_URL = "https://publicpulse-back-739844766362.asia-southeast2.run.app"
+const API_URL = "http://localhost:8000"
+
 // Функция для парсинга даты из разных форматов
 const parseDate = (dateString) => {
+
+
   if (!dateString) return null;
 
   let parsedDate;
@@ -122,7 +127,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
           // Отправляем уведомление через Telegram бота для telegram пользователей
           if (complaint.telegram_user_id) {
             try {
-              const response = await fetch('https://publicpulse-front-739844766362.asia-southeast2.run.app/api/notify-status-update', {
+              const response = await fetch(`${API_URL}/api/notify-status-update`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -148,7 +153,7 @@ const ComplaintModal = ({ complaint, isOpen, onClose, onUpdate }) => {
           // Отправляем уведомление по email для website submissions
           if (complaint.submission_source === 'website') {
             try {
-              const response = await fetch('https://publicpulse-back-739844766362.asia-southeast2.run.app/api/send-status-email/', {
+              const response = await fetch(`${API_URL}/api/send-status-email/`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

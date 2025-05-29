@@ -11,6 +11,29 @@ from datetime import datetime
 
 load_dotenv()
 
+# List of government agencies
+AGENCIES = [
+    "Мэрия",
+    "Министерство внутренних дел",
+    "Министерство чрезвычайных ситуаций",
+    "Министерство иностранных дел",
+    "Министерство юстиции",
+    "Министерство обороны",
+    "Министерство финансов",
+    "Министерство сельского хозяйства",
+    "Министерство транспорта",
+    "Министерство образования и науки",
+    "Министерство экономики и коммерции",
+    "Министерство цифрового развития",
+    "Министерство труда",
+    "Министерство здравоохранения",
+    "Министерство энергетики",
+    "Министерство культуры",
+    "Министерство природных ресурсов",
+    "Министерство архитектуры",
+    "Государственный комитет национальной безопасности",
+    "Социальный фонд Кыргызской Республики"
+]
 
 def get_openai_client():
     """Initialize and return OpenAI client with proper error handling."""
@@ -22,36 +45,24 @@ def get_openai_client():
         )
     return OpenAI(api_key=api_key)
 
-
-def load_agency_data():
-    """Load agency data from JSON file."""
-    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    with open(os.path.join(current_dir, "agency.json"), "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
 def analyze_report_text(report_text):
     """Analyze report text using OpenAI to determine the service and agency."""
-    agency_data = load_agency_data()
-
     # Create a prompt for OpenAI
-    services_list = "\n".join(
-        [f"- {item['service']} ({item['agency']})" for item in agency_data]
-    )
-    prompt = f"""Given the following report text, determine which government service it relates to from the list below.
+    agencies_list = "\n".join([f"- {agency}" for agency in AGENCIES])
+    prompt = f"""Given the following report text, determine which government agency it relates to from the list below.
     You must return a valid JSON object with exactly these fields: service and agency.
-    The service must match exactly one of the services from the list below.
-    The agency must match the corresponding agency for that service.
+    The agency must match exactly one of the agencies from the list below.
+    The service should be a specific service or issue that the citizen is complaining about.
 
     Report text: {report_text}
 
-    Available services:
-    {services_list}
+    Available agencies:
+    {agencies_list}
 
     Return ONLY a JSON object in this exact format:
-    {{"service": "exact service name from list", "agency": "corresponding agency name", "importance": "low, medium, high"}}
+    {{"service": "specific service or issue being complained about", "agency": "exact agency name from list", "importance": "low, medium, high"}}
     
-    if you deem the report text does not belong to any of the services, or does not contain any relevant information, return:
+    if you deem the report text does not belong to any of the agencies, or does not contain any relevant information, return:
     {{"service": "Spam", "agency": "Spam", "importance": "low"}}
     """
 
@@ -63,7 +74,7 @@ def analyze_report_text(report_text):
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant that categorizes citizen reports into government services. You must return only valid JSON.",
+                    "content": "You are a helpful assistant that categorizes citizen reports into government agencies. You must return only valid JSON.",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -85,15 +96,11 @@ def analyze_report_text(report_text):
                 print("Invalid response format - missing required fields")
                 return {"service": "Spam", "agency": "Spam", "importance": "low"}
 
-            # Verify the service exists in our list
-            service_exists = any(
-                item["service"] == result["service"]
-                and item["agency"] == result["agency"]
-                for item in agency_data
-            )
+            # Verify the agency exists in our list
+            agency_exists = result["agency"] in AGENCIES
 
-            if not service_exists:
-                print(f"Service/Agency pair not found in our list: {result}")
+            if not agency_exists:
+                print(f"Agency not found in our list: {result}")
                 return {"service": "Spam", "agency": "Spam", "importance": "low"}
 
             return result
@@ -116,7 +123,7 @@ def save_to_firebase(report_data):
 
         # Use the provided ID if available, otherwise generate a unique one
         document_id = (
-            report_data.get("id")
+            report_data.get("rpt")
             or f"report_{datetime.now().strftime('%Y%m%d_%H%m%S')}"
         )
 
