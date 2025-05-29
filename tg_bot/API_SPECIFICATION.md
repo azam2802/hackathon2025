@@ -107,7 +107,7 @@ User-Agent: GovServices-TelegramBot/1.0
 
 ### report_type
 - **Тип:** string
-- **Возможные значения:** "Жалоба", "Рекомендации"
+- **Возможные значения:** "Жалоба"
 - **Обязательное:** Да
 
 ### region
@@ -197,7 +197,7 @@ class ReportRequest(BaseModel):
 @app.post("/api/reports")
 async def create_report(report: ReportRequest):
     # Валидация данных
-    if report.report_type not in ["Жалоба", "Рекомендации"]:
+    if report.report_type not in ["Жалоба"]:
         raise HTTPException(400, "Invalid report type")
     
     # Сохранение в БД

@@ -176,7 +176,10 @@
     "currentPriority": "Текущий приоритет",
     "saveChanges": "Сохранить изменения",
     "saving": "Сохранение...",
-    "updateError": "Ошибка при обновлении обращения"
+    "updateError": "Ошибка при обновлении обращения",
+    "photo": "Фото",
+    "complaintPhoto": "Фото жалобы",
+    "solution": "Решение"
   },
   "complaintForm": {
     "pageTitle": "Подача обращения",
