@@ -126,6 +126,9 @@ def save_to_firebase(report_data):
             report_data.get("rpt")
             or f"report_{datetime.now().strftime('%Y%m%d_%H%m%S')}"
         )
+        print("report_data", report_data)
+        print("report_data rpt", report_data.get("rpt"))
+        
 
         # Add the report to the 'reports' collection with the specified document ID
         db.collection("reports").document(document_id).set(report_data)
