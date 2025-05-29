@@ -42,7 +42,7 @@ class FirestoreWebhookView(APIView):
                     new_status = document_data.get('status', complaint.status)
                     
                     if (old_status and old_status != new_status and 
-                        complaint.submission_source == 'website' and
+                        complaint.submission_source in ['website', 'mobile'] and
                         new_status in ['pending', 'resolved', 'cancelled']):
                         
                         logger.info(f"Status changed for complaint {document_id}: {old_status} -> {new_status}")

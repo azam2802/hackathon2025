@@ -87,7 +87,7 @@ class Complaint(models.Model):
             self.sync_to_firestore()
             
             # Send email notification if status changed
-            if is_update and old_status and old_status != self.status and self.submission_source == 'website':
+            if is_update and old_status and old_status != self.status and self.submission_source in ['website', 'mobile']:
                 self.send_status_update_email()
                 
         except Exception as e:
