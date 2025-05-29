@@ -4,7 +4,7 @@ import ParticlesBackground from '../../Components/ParticlesBackground/ParticlesB
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { useTranslation } from 'react-i18next';
-import { useComplaintApi } from '../../hooks/useComplaintApi';
+import { useComplaintApi } from '../../Hooks/useComplaintApi.js';
 import { 
   Assignment, 
   LocationOn, 
@@ -25,7 +25,7 @@ import {
 
 const ComplaintForm = () => {
   const { t } = useTranslation();
-  const { submitComplaint, isLoading, error } = useComplaintApi();
+  const { submitComplaint } = useComplaintApi();
   const [formData, setFormData] = useState({
     report_text: '',
     recommendations: '',

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API_BASE_URL = 'https://publicpulse-back-739844766362.asia-southeast2.run.app'
+const API_BASE_URL = 'https://publicpulse-back-739844766362.asia-southeast2.run.app/'
 
 export const useComplaintApi = () => {
   const [isLoading, setIsLoading] = useState(false);
