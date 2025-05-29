@@ -108,7 +108,19 @@
     "noRegionData": "No region data available",
     "complaintCount": "Complaint Count",
     "days": "days",
-    "new": "New"
+    "new": "New",
+    "legend": "Map Legend",
+    "cluster": "Cluster",
+    "showHeatmap": "Show Heatmap",
+    "showClusters": "Show Clusters",
+    "status": "Status",
+    "priority": "Priority",
+    "heatmap": "Heatmap",
+    "clusters": "Clusters",
+    "mapFilters": "Map Filters",
+    "density": "Complaint Density",
+    "highDensity": "High Density",
+    "lowDensity": "Low Density"
   },
   "complaints": {
     "analysisTitle": "Citizen Complaints Analysis",

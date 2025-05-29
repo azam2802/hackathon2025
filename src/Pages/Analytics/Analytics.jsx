@@ -5,8 +5,8 @@ import './Analytics.scss';
 import { useTranslation } from 'react-i18next';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale } from 'chart.js';
 import { Line, Bar, Pie, PolarArea } from 'react-chartjs-2';
-import { Map, Marker, ZoomControl } from 'pigeon-maps';
-import { FaExpand, FaCompress } from 'react-icons/fa';
+import { Map, Marker, ZoomControl, Overlay } from 'pigeon-maps';
+import { FaExpand, FaCompress, FaLayerGroup, FaFilter } from 'react-icons/fa';
 
 // Register ChartJS components
 ChartJS.register(
@@ -33,6 +33,13 @@ const Analytics = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [mapFilters, setMapFilters] = useState({
+    status: 'all',
+    priority: 'all',
+    showHeatmap: false,
+    showClusters: true
+  });
+  const [showMapFilters, setShowMapFilters] = useState(false);
 
   const parseReportDate = (dateString) => {
     if (!dateString) return new Date();
@@ -552,6 +559,158 @@ const Analytics = () => {
     );
   };
 
+  // Enhanced map markers with clustering
+  const mapMarkers = useMemo(() => {
+    if (!geoDistribution.markers.length) return { markers: [], clusters: [] };
+    
+    const filteredMarkers = geoDistribution.markers.filter(marker => {
+      if (mapFilters.status !== 'all' && marker.status !== mapFilters.status) return false;
+      if (mapFilters.priority !== 'all' && marker.priority !== mapFilters.priority) return false;
+      return true;
+    });
+
+    // Simple clustering implementation
+    const clusters = [];
+    const gridSize = 0.1; // Adjust based on zoom level
+    
+    filteredMarkers.forEach(marker => {
+      const gridX = Math.floor(marker.lng / gridSize);
+      const gridY = Math.floor(marker.lat / gridSize);
+      const clusterKey = `${gridX},${gridY}`;
+      
+      if (!clusters[clusterKey]) {
+        clusters[clusterKey] = {
+          lat: marker.lat,
+          lng: marker.lng,
+          count: 1,
+          markers: [marker]
+        };
+      } else {
+        clusters[clusterKey].count++;
+        clusters[clusterKey].markers.push(marker);
+      }
+    });
+
+    return {
+      markers: filteredMarkers,
+      clusters: Object.values(clusters)
+    };
+  }, [geoDistribution.markers, mapFilters]);
+
+  // Heatmap data preparation
+  const heatmapData = useMemo(() => {
+    if (!filteredData.length) return [];
+    
+    // Group complaints by location and calculate density
+    const locationGroups = filteredData.reduce((acc, complaint) => {
+      const key = `${complaint.latitude},${complaint.longitude}`;
+      if (!acc[key]) {
+        acc[key] = {
+          count: 0,
+          totalPriority: 0,
+          latitude: complaint.latitude,
+          longitude: complaint.longitude
+        };
+      }
+      acc[key].count++;
+      // Add priority weight (critical: 4, high: 3, medium: 2, low: 1)
+      acc[key].totalPriority += 
+        complaint.importance === 'critical' ? 4 :
+        complaint.importance === 'high' ? 3 :
+        complaint.importance === 'medium' ? 2 : 1;
+      return acc;
+    }, {});
+
+    // Convert to array and calculate intensity
+    return Object.values(locationGroups).map(group => ({
+      lat: group.latitude,
+      lng: group.longitude,
+      // Calculate intensity based on both count and priority
+      intensity: (group.count * (group.totalPriority / group.count)) / 10
+    }));
+  }, [filteredData]);
+
+  // Map legend component
+  const MapLegend = () => (
+    <div className="map-legend">
+      <h4>{t('analytics.legend')}</h4>
+      <div className="legend-items">
+        <div className="legend-item">
+          <span className="marker resolved"></span>
+          <span>{t('status.resolved')}</span>
+        </div>
+        <div className="legend-item">
+          <span className="marker pending"></span>
+          <span>{t('status.inProgress')}</span>
+        </div>
+        <div className="legend-item">
+          <span className="marker cancelled"></span>
+          <span>{t('status.rejected')}</span>
+        </div>
+        {mapFilters.showClusters && (
+          <div className="legend-item">
+            <span className="marker cluster"></span>
+            <span>{t('analytics.cluster')}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Map filters component
+  const MapFilters = () => (
+    <div className="map-filters">
+      <div className="filter-group">
+        <label>{t('analytics.status')}:</label>
+        <select
+          value={mapFilters.status}
+          onChange={(e) => setMapFilters(prev => ({ ...prev, status: e.target.value }))}
+        >
+          <option value="all">{t('complaints.all')}</option>
+          <option value="resolved">{t('status.resolved')}</option>
+          <option value="pending">{t('status.inProgress')}</option>
+          <option value="cancelled">{t('status.rejected')}</option>
+        </select>
+      </div>
+      
+      <div className="filter-group">
+        <label>{t('analytics.priority')}:</label>
+        <select
+          value={mapFilters.priority}
+          onChange={(e) => setMapFilters(prev => ({ ...prev, priority: e.target.value }))}
+        >
+          <option value="all">{t('complaints.all')}</option>
+          <option value="critical">{t('status.critical')}</option>
+          <option value="high">{t('status.high')}</option>
+          <option value="medium">{t('status.medium')}</option>
+          <option value="low">{t('status.low')}</option>
+        </select>
+      </div>
+      
+      <div className="filter-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={mapFilters.showHeatmap}
+            onChange={(e) => setMapFilters(prev => ({ ...prev, showHeatmap: e.target.checked }))}
+          />
+          {t('analytics.showHeatmap')}
+        </label>
+      </div>
+      
+      <div className="filter-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={mapFilters.showClusters}
+            onChange={(e) => setMapFilters(prev => ({ ...prev, showClusters: e.target.checked }))}
+          />
+          {t('analytics.showClusters')}
+        </label>
+      </div>
+    </div>
+  );
+
   return (
     <div className="analytics-page">
       <div className="page-title">
@@ -741,32 +900,87 @@ const Analytics = () => {
               <div className={`map-container ${isMapExpanded ? 'expanded' : ''}`}>
                 {geoDistribution.markers.length > 0 ? (
                   <>
-                    <button 
-                      className="expand-map-button"
-                      onClick={() => setIsMapExpanded(!isMapExpanded)}
-                    >
-                      {isMapExpanded ? <FaCompress /> : <FaExpand />}
-                    </button>
+                    <div className="map-controls">
+                      <button 
+                        className="expand-map-button"
+                        onClick={() => setIsMapExpanded(!isMapExpanded)}
+                      >
+                        {isMapExpanded ? <FaCompress /> : <FaExpand />}
+                      </button>
+                      <button 
+                        className="filter-map-button"
+                        onClick={() => setShowMapFilters(!showMapFilters)}
+                      >
+                        <FaFilter />
+                      </button>
+                    </div>
+                    
+                    {showMapFilters && <MapFilters />}
+                    
                     <Map 
                       height={isMapExpanded ? 800 : 400}
                       center={mapCenter}
                       defaultZoom={7}
                     >
                       <ZoomControl />
-                      {geoDistribution.markers.map(marker => (
-                        <Marker
-                          key={marker.id}
-                          width={30}
-                          anchor={[marker.lat, marker.lng]}
-                          color={
-                            marker.status === 'resolved' ? '#4caf50' :
-                            marker.status === 'cancelled' ? '#f44336' :
-                            '#2196f3'
-                          }
-                          onClick={() => handleMarkerClick(marker)}
-                        />
+                      
+                      {mapFilters.showHeatmap && heatmapData.map((point, index) => (
+                        <Overlay
+                          key={`heat-${index}`}
+                          anchor={[point.lat, point.lng]}
+                          offset={[0, 0]}
+                        >
+                          <div 
+                            className="heatmap-point"
+                            style={{
+                              left: `${point.lng}%`,
+                              top: `${point.lat}%`,
+                              // Adjust opacity based on intensity
+                              opacity: Math.min(point.intensity, 0.8),
+                              // Make the point larger for higher intensity
+                              transform: `scale(${1 + point.intensity})`
+                            }}
+                          />
+                        </Overlay>
                       ))}
+                      
+                      {mapFilters.showClusters ? (
+                        mapMarkers.clusters.map((cluster, index) => (
+                          <Marker
+                            key={`cluster-${index}`}
+                            width={30 + Math.min(cluster.count * 2, 20)}
+                            anchor={[cluster.lat, cluster.lng]}
+                            color="#3a36e0"
+                            onClick={() => {
+                              if (cluster.count === 1) {
+                                handleMarkerClick(cluster.markers[0]);
+                              }
+                            }}
+                          >
+                            <div className="cluster-marker">
+                              {cluster.count}
+                            </div>
+                          </Marker>
+                        ))
+                      ) : (
+                        mapMarkers.markers.map(marker => (
+                          <Marker
+                            key={marker.id}
+                            width={30}
+                            anchor={[marker.lat, marker.lng]}
+                            color={
+                              marker.status === 'resolved' ? '#4caf50' :
+                              marker.status === 'cancelled' ? '#f44336' :
+                              '#2196f3'
+                            }
+                            onClick={() => handleMarkerClick(marker)}
+                          />
+                        ))
+                      )}
                     </Map>
+                    
+                    <MapLegend />
+                    
                     {isModalOpen && selectedReport && (
                       <ReportModal 
                         report={selectedReport} 

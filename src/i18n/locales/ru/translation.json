@@ -113,7 +113,19 @@
     "noRegionData": "Нет данных по регионам",
     "complaintCount": "Количество обращений",
     "days": "дней",
-    "new": "Новые"
+    "new": "Новые",
+    "legend": "Легенда карты",
+    "cluster": "Кластер",
+    "showHeatmap": "Показать тепловую карту",
+    "showClusters": "Показать кластеры",
+    "status": "Статус",
+    "priority": "Приоритет",
+    "heatmap": "Тепловая карта",
+    "clusters": "Кластеры",
+    "mapFilters": "Фильтры карты",
+    "density": "Плотность жалоб",
+    "highDensity": "Высокая плотность",
+    "lowDensity": "Низкая плотность"
   },
   "complaints": {
     "analysisTitle": "Анализ обращений граждан",

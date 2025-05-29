@@ -226,30 +226,141 @@
             left: 0;
             right: 0;
             width: auto;
-            height: 680px;
+            height: 800px;
             z-index: 1000;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             border-radius: 8px;
           }
+
+          .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            display: flex;
+            gap: 8px;
+          }
+
+          .expand-map-button,
+          .filter-map-button {
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+              background: #f5f5f5;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            }
+          }
         }
         
-        .expand-map-button {
+        .map-filters {
           position: absolute;
-          top: 10px;
+          top: 60px;
           right: 10px;
           z-index: 1001;
-          padding: 8px 16px;
-          background: #fff;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          transition: all 0.2s ease;
+          background: white;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          width: 250px;
 
-          &:hover {
-            background: #f5f5f5;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          .filter-group {
+            margin-bottom: 12px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            label {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 0.9rem;
+              color: #555;
+              margin-bottom: 4px;
+
+              input[type="checkbox"] {
+                margin: 0;
+              }
+            }
+
+            select {
+              width: 100%;
+              padding: 6px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 0.9rem;
+
+              &:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 2px rgba(58, 54, 224, 0.1);
+              }
+            }
+          }
+        }
+        
+        .map-legend {
+          position: absolute;
+          bottom: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          padding: 12px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+          h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #333;
+          }
+
+          .legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #555;
+
+            .marker {
+              width: 12px;
+              height: 12px;
+              border-radius: 50%;
+              display: inline-block;
+
+              &.resolved {
+                background-color: #4caf50;
+              }
+
+              &.pending {
+                background-color: #2196f3;
+              }
+
+              &.cancelled {
+                background-color: #f44336;
+              }
+
+              &.cluster {
+                background-color: #3a36e0;
+              }
+            }
           }
         }
         
@@ -510,85 +621,26 @@
   }
 }
 
-.geo-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  position: relative;
-  
-  @media (max-width: 800px) {
-    grid-template-columns: 1fr;
-  }
-  
-  &.map-expanded-active {
-    &::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 999;
-    }
-  }
-  
-  .map-container {
-    position: relative;
-    width: 100%;
-    height: 400px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.heatmap-point {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,0,0,0.8) 0%, rgba(255,0,0,0.4) 50%, rgba(255,0,0,0) 100%);
+  transform-origin: center;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(255,0,0,0.3);
+}
 
-    &.expanded {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      width: auto;
-      height: 800px;
-      z-index: 1000;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
-    }
-  }
-  
-  .expand-map-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1001;
-    padding: 8px 16px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: #f5f5f5;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-  }
-  
-  .region-chart {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 16px;
-    
-    h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #333;
-      text-align: center;
-    }
-    
-    height: 400px;
-  }
+.cluster-marker {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
